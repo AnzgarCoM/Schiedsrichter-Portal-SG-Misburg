@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JSR Portal - Live Cloud</title>
+    <title>JSR Portal - SG Misburg</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
@@ -16,8 +16,10 @@
 <div id="loginSection">
     <div class="card login-card">
         <h2>Interner Login</h2>
-        <p>Gib das Vereins-Passwort ein:</p>
-        <input type="password" id="pwInput" placeholder="Passwort...">
+        <p>Bitte gib das Passwort ein:</p>
+        <div class="input-group">
+            <input type="password" id="pwInput" placeholder="Passwort...">
+        </div>
         <button onclick="handleLogin()" class="full-btn">Anmelden</button>
         <p id="errorMsg" class="error-msg"></p>
     </div>
@@ -25,15 +27,17 @@
 
 <div id="mainContent" style="display:none;">
     <div class="user-bar">
-        <span id="userStatus"></span>
+        <span id="userStatus">Lade Status...</span>
         <button onclick="location.reload()" class="logout-btn">Abmelden</button>
     </div>
 
     <div class="card">
+        <h3>Dashboard</h3>
         <div id="dashboard"></div>
     </div>
 
     <div class="card">
+        <h3>Aktueller Spielplan</h3>
         <div class="table-container">
             <table id="mainTable">
                 <thead>
@@ -42,18 +46,18 @@
                         <th>Zeit</th>
                         <th>Halle</th>
                         <th>Klasse</th>
-                        <th>Paarung</th>
+                        <th>Heim - Gast</th>
                         <th>JSR 1</th>
                         <th>JSR 2</th>
                         <th>JSR 3</th>
                         <th>Status</th>
-                        <th class="admin-only">Aktion</th>
+                        <th class="admin-only" style="display:none;">Aktion</th>
                     </tr>
                 </thead>
                 <tbody></tbody>
             </table>
         </div>
-        <button class="admin-only full-btn" onclick="addGame()" style="margin-top:15px; background:#0033a0;">+ Neues Spiel hinzufügen</button>
+        <button class="admin-only full-btn" id="addGameBtn" onclick="addGame()" style="display:none; margin-top:15px; background:#0033a0;">+ Neues Spiel hinzufügen</button>
     </div>
 
     <div class="card">
