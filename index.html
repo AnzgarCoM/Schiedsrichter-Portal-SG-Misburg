@@ -24,12 +24,12 @@
 
 <div id="mainContent" style="display:none;">
     <div class="user-bar">
-        <span id="userStatus">Berechtigung wird geprüft...</span>
+        <span id="userStatus">Status wird geprüft...</span>
         <button onclick="location.reload()" class="logout-btn">Logout</button>
     </div>
 
-    <div class="card" id="dashCard">
-        <div id="dashboard"></div>
+    <div class="card no-border">
+        <div id="dashboard" class="dashboard-grid"></div>
     </div>
 
     <div class="card">
@@ -69,7 +69,7 @@
                         <th>Von-Bis</th>
                         <th>Halle</th>
                         <th>Turnier-Name</th>
-                        <th>Eingeteilte JSR</th>
+                        <th>JSRs</th>
                         <th>Status</th>
                         <th class="admin-only">Aktion</th>
                     </tr>

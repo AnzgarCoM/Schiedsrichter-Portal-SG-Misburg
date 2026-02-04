@@ -28,11 +28,7 @@ window.handleLogin = function() {
 function startApp() {
     document.getElementById("loginSection").style.display = "none";
     document.getElementById("mainContent").style.display = "block";
-    document.getElementById("userStatus").innerText = userRole === 'admin' ? "Modus: Admin" : "Modus: Schiri";
-
-    if (userRole === 'admin') {
-        document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'block');
-    }
+    document.getElementById("userStatus").innerText = userRole === 'admin' ? "Admin-Bereich" : "Schiedsrichter-Ansicht";
 
     onSnapshot(doc(db, "plan", "neue_struktur"), (docSnap) => {
         if (docSnap.exists()) {
@@ -45,13 +41,20 @@ function startApp() {
 }
 
 function renderAll() {
-    // Sortieren nach Datum
+    // Sortierung nach Datum
     allData.spiele.sort((a,b) => new Date(a.date) - new Date(b.date));
     allData.turniere.sort((a,b) => new Date(a.date) - new Date(b.date));
 
     renderTable("spieleTable", allData.spiele, "spiele");
     renderTable("turnierTable", allData.turniere, "turniere");
     renderDashboard();
+
+    // Admin-Elemente zeigen
+    if (userRole === 'admin') {
+        document.querySelectorAll('.admin-only').forEach(el => {
+            el.style.display = (el.tagName === 'TH' || el.tagName === 'TD') ? 'table-cell' : 'block';
+        });
+    }
 }
 
 function renderTable(tableId, data, type) {
@@ -64,11 +67,11 @@ function renderTable(tableId, data, type) {
         if (type === "spiele") {
             tr.innerHTML = `
                 <td><input type="date" value="${item.date}" ${!isAdmin?'disabled':''} onchange="updateRow('${type}',${i},'date',this.value)"></td>
-                <td><input type="text" value="${item.time}" ${!isAdmin?'disabled':''} onchange="updateRow('${type}',${i},'time',this.value)"></td>
+                <td><input type="text" value="${item.time}" ${!isAdmin?'disabled':''} placeholder="00:00" onchange="updateRow('${type}',${i},'time',this.value)"></td>
                 <td><input value="${item.hall}" ${!isAdmin?'disabled':''} onchange="updateRow('${type}',${i},'hall',this.value)"></td>
-                <td><input value="${item.age}" ${!isAdmin?'disabled':''} onchange="updateRow('${type}',${i},'age',this.value)"></td>
+                <td><input value="${item.age}" ${!isAdmin?'disabled':''} style="width:60px" onchange="updateRow('${type}',${i},'age',this.value)"></td>
                 <td><input value="${item.note}" ${!isAdmin?'disabled':''} onchange="updateRow('${type}',${i},'note',this.value)"></td>
-                <td><input value="${item.jsrs}" ${!isAdmin?'disabled':''} placeholder="Namen..." onchange="updateRow('${type}',${i},'jsrs',this.value)"></td>
+                <td><input value="${item.jsrs}" ${!isAdmin?'disabled':''} placeholder="Namen eintragen" onchange="updateRow('${type}',${i},'jsrs',this.value)"></td>
                 <td><select ${!isAdmin?'disabled':''} onchange="updateRow('${type}',${i},'status',this.value)">
                     <option ${item.status==='Offen'?'selected':''}>Offen</option>
                     <option ${item.status==='Besetzt'?'selected':''}>Besetzt</option>
@@ -78,10 +81,10 @@ function renderTable(tableId, data, type) {
         } else {
             tr.innerHTML = `
                 <td><input type="date" value="${item.date}" ${!isAdmin?'disabled':''} onchange="updateRow('${type}',${i},'date',this.value)"></td>
-                <td><input type="text" value="${item.time}" ${!isAdmin?'disabled':''} placeholder="z.B. 10-15 Uhr" onchange="updateRow('${type}',${i},'time',this.value)"></td>
+                <td><input type="text" value="${item.time}" ${!isAdmin?'disabled':''} placeholder="10-14 Uhr" onchange="updateRow('${type}',${i},'time',this.value)"></td>
                 <td><input value="${item.hall}" ${!isAdmin?'disabled':''} onchange="updateRow('${type}',${i},'hall',this.value)"></td>
                 <td><input value="${item.name}" ${!isAdmin?'disabled':''} onchange="updateRow('${type}',${i},'name',this.value)"></td>
-                <td><input value="${item.jsrs}" ${!isAdmin?'disabled':''} placeholder="Wer pfeift?" onchange="updateRow('${type}',${i},'jsrs',this.value)"></td>
+                <td><input value="${item.jsrs}" ${!isAdmin?'disabled':''} placeholder="Schiris..." onchange="updateRow('${type}',${i},'jsrs',this.value)"></td>
                 <td><select ${!isAdmin?'disabled':''} onchange="updateRow('${type}',${i},'status',this.value)">
                     <option ${item.status==='Offen'?'selected':''}>Offen</option>
                     <option ${item.status==='Besetzt'?'selected':''}>Besetzt</option>
@@ -108,23 +111,28 @@ window.addEntry = async (type) => {
 };
 
 window.deleteEntry = async (type, i) => {
-    if(!confirm("Löschen?")) return;
+    if(!confirm("Eintrag löschen?")) return;
     allData[type].splice(i, 1);
     await setDoc(doc(db, "plan", "neue_struktur"), allData);
 };
 
 function renderDashboard() {
+    const dash = document.getElementById("dashboard");
     const offeneSpiele = allData.spiele.filter(s => s.status === "Offen").length;
     const offeneTurniere = allData.turniere.filter(t => t.status === "Offen").length;
-    document.getElementById("dashboard").innerHTML = `
-        <div class="statBox">Offene Spiele: ${offeneSpiele}</div>
-        <div class="statBox">Offene Turniere: ${offeneTurniere}</div>
+    const gesamt = allData.spiele.length + allData.turniere.length;
+    const offen = offeneSpiele + offeneTurniere;
+
+    dash.innerHTML = `
+        <div class="stat-card blue-card"><span class="stat-num">${gesamt}</span><span class="stat-label">Termine</span></div>
+        <div class="stat-card ${offen > 0 ? 'red-card' : 'green-card'}"><span class="stat-num">${offen}</span><span class="stat-label">Dringend</span></div>
+        <div class="stat-card green-card"><span class="stat-num">${gesamt - offen}</span><span class="stat-label">Besetzt</span></div>
     `;
 }
 
 window.exportPDF = () => {
     const el = document.getElementById("mainContent");
-    html2pdf().from(el).set({ margin: 5, filename: 'JSR-Plan.pdf', html2canvas: { scale: 2 } }).save();
+    html2pdf().from(el).set({ margin: 5, filename: 'JSR_Plan_Misburg.pdf', html2canvas: { scale: 2 } }).save();
 };
 
 
