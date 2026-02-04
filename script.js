@@ -1,7 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, doc, onSnapshot, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// Deine Firebase Konfiguration
 const firebaseConfig = {
   apiKey: "AIzaSyC27vfNJL-mxl5wtg69WsWPkaceEP6yUjs",
   authDomain: "jsr-1-d3000.firebaseapp.com",
@@ -16,119 +15,116 @@ const db = getFirestore(app);
 
 const ADMIN_PW = "admin2025";
 const SCHIRI_PW = "schiri2025";
-
 let userRole = null;
-let currentPlan = [];
+let allData = { spiele: [], turniere: [] };
 
-// LOGIN FUNKTION (Global verfügbar machen)
 window.handleLogin = function() {
     const input = document.getElementById("pwInput").value;
-    const error = document.getElementById("errorMsg");
-
-    if (input === ADMIN_PW) {
-        userRole = 'admin';
-        startApp();
-    } else if (input === SCHIRI_PW) {
-        userRole = 'schiri';
-        startApp();
-    } else {
-        error.innerText = "Falsches Passwort!";
-    }
+    if (input === ADMIN_PW) { userRole = 'admin'; startApp(); }
+    else if (input === SCHIRI_PW) { userRole = 'schiri'; startApp(); }
+    else { document.getElementById("errorMsg").innerText = "Falsches Passwort!"; }
 };
 
-async function startApp() {
-    // Elemente ein/ausblenden
+function startApp() {
     document.getElementById("loginSection").style.display = "none";
     document.getElementById("mainContent").style.display = "block";
-    
-    document.getElementById("userStatus").innerText = userRole === 'admin' ? "Modus: Administrator" : "Modus: Schiedsrichter";
+    document.getElementById("userStatus").innerText = userRole === 'admin' ? "Modus: Admin" : "Modus: Schiri";
 
-    // Admin-spezifische Elemente zeigen
     if (userRole === 'admin') {
-        const adminElements = document.querySelectorAll('.admin-only');
-        adminElements.forEach(el => {
-            if (el.tagName === 'TH' || el.tagName === 'TD') {
-                el.style.display = 'table-cell';
-            } else {
-                el.style.display = 'block';
-            }
-        });
+        document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'block');
     }
 
-    // Live-Verbindung zu Firebase Firestore
-    onSnapshot(doc(db, "plan", "spiele"), (docSnap) => {
+    onSnapshot(doc(db, "plan", "neue_struktur"), (docSnap) => {
         if (docSnap.exists()) {
-            currentPlan = docSnap.data().liste || [];
-            renderTable();
+            allData = docSnap.data();
+            renderAll();
         } else {
-            // Initiales Dokument erstellen falls leer
-            setDoc(doc(db, "plan", "spiele"), { liste: [] });
+            setDoc(doc(db, "plan", "neue_struktur"), { spiele: [], turniere: [] });
         }
     });
 }
 
-function renderTable() {
-    const tbody = document.querySelector("#mainTable tbody");
-    if (!tbody) return;
-    tbody.innerHTML = "";
-    const isAdmin = (userRole === 'admin');
+function renderAll() {
+    // Sortieren nach Datum
+    allData.spiele.sort((a,b) => new Date(a.date) - new Date(b.date));
+    allData.turniere.sort((a,b) => new Date(a.date) - new Date(b.date));
 
-    currentPlan.forEach((g, i) => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-            <td><input type="date" value="${g.date || ''}" ${!isAdmin?'disabled':''} onchange="updateRow(${i},'date',this.value)"></td>
-            <td><input type="text" value="${g.time || ''}" ${!isAdmin?'disabled':''} style="width:80px" onchange="updateRow(${i},'time',this.value)"></td>
-            <td><input value="${g.hall || ''}" ${!isAdmin?'disabled':''} onchange="updateRow(${i},'hall',this.value)"></td>
-            <td><input value="${g.age || ''}" ${!isAdmin?'disabled':''} style="width:60px" onchange="updateRow(${i},'age',this.value)"></td>
-            <td><input value="${g.note || ''}" ${!isAdmin?'disabled':''} onchange="updateRow(${i},'note',this.value)"></td>
-            <td><input value="${g.jsr1 || ''}" ${!isAdmin?'disabled':''} onchange="updateRow(${i},'jsr1',this.value)"></td>
-            <td><input value="${g.jsr2 || ''}" ${!isAdmin?'disabled':''} onchange="updateRow(${i},'jsr2',this.value)"></td>
-            <td><input value="${g.jsr3 || ''}" ${!isAdmin?'disabled':''} onchange="updateRow(${i},'jsr3',this.value)"></td>
-            <td>
-                <select ${!isAdmin?'disabled':''} onchange="updateRow(${i},'status',this.value)">
-                    <option ${g.status==='Offen'?'selected':''}>Offen</option>
-                    <option ${g.status==='Besetzt'?'selected':''}>Besetzt</option>
-                </select>
-            </td>
-            ${isAdmin ? `<td><button onclick="deleteGame(${i})" style="background:red; color:white; border:none; padding:5px 10px; border-radius:4px;">X</button></td>` : ''}
-        `;
-        tbody.appendChild(tr);
-    });
+    renderTable("spieleTable", allData.spiele, "spiele");
+    renderTable("turnierTable", allData.turniere, "turniere");
     renderDashboard();
 }
 
-// DATENÄNDERUNG (Global)
-window.updateRow = async (i, key, val) => {
+function renderTable(tableId, data, type) {
+    const tbody = document.querySelector(`#${tableId} tbody`);
+    tbody.innerHTML = "";
+    const isAdmin = (userRole === 'admin');
+
+    data.forEach((item, i) => {
+        const tr = document.createElement("tr");
+        if (type === "spiele") {
+            tr.innerHTML = `
+                <td><input type="date" value="${item.date}" ${!isAdmin?'disabled':''} onchange="updateRow('${type}',${i},'date',this.value)"></td>
+                <td><input type="text" value="${item.time}" ${!isAdmin?'disabled':''} onchange="updateRow('${type}',${i},'time',this.value)"></td>
+                <td><input value="${item.hall}" ${!isAdmin?'disabled':''} onchange="updateRow('${type}',${i},'hall',this.value)"></td>
+                <td><input value="${item.age}" ${!isAdmin?'disabled':''} onchange="updateRow('${type}',${i},'age',this.value)"></td>
+                <td><input value="${item.note}" ${!isAdmin?'disabled':''} onchange="updateRow('${type}',${i},'note',this.value)"></td>
+                <td><input value="${item.jsrs}" ${!isAdmin?'disabled':''} placeholder="Namen..." onchange="updateRow('${type}',${i},'jsrs',this.value)"></td>
+                <td><select ${!isAdmin?'disabled':''} onchange="updateRow('${type}',${i},'status',this.value)">
+                    <option ${item.status==='Offen'?'selected':''}>Offen</option>
+                    <option ${item.status==='Besetzt'?'selected':''}>Besetzt</option>
+                </select></td>
+                ${isAdmin ? `<td><button onclick="deleteEntry('${type}',${i})" style="color:red">X</button></td>` : ''}
+            `;
+        } else {
+            tr.innerHTML = `
+                <td><input type="date" value="${item.date}" ${!isAdmin?'disabled':''} onchange="updateRow('${type}',${i},'date',this.value)"></td>
+                <td><input type="text" value="${item.time}" ${!isAdmin?'disabled':''} placeholder="z.B. 10-15 Uhr" onchange="updateRow('${type}',${i},'time',this.value)"></td>
+                <td><input value="${item.hall}" ${!isAdmin?'disabled':''} onchange="updateRow('${type}',${i},'hall',this.value)"></td>
+                <td><input value="${item.name}" ${!isAdmin?'disabled':''} onchange="updateRow('${type}',${i},'name',this.value)"></td>
+                <td><input value="${item.jsrs}" ${!isAdmin?'disabled':''} placeholder="Wer pfeift?" onchange="updateRow('${type}',${i},'jsrs',this.value)"></td>
+                <td><select ${!isAdmin?'disabled':''} onchange="updateRow('${type}',${i},'status',this.value)">
+                    <option ${item.status==='Offen'?'selected':''}>Offen</option>
+                    <option ${item.status==='Besetzt'?'selected':''}>Besetzt</option>
+                </select></td>
+                ${isAdmin ? `<td><button onclick="deleteEntry('${type}',${i})" style="color:red">X</button></td>` : ''}
+            `;
+        }
+        tbody.appendChild(tr);
+    });
+}
+
+window.updateRow = async (type, i, key, val) => {
     if(userRole !== 'admin') return;
-    currentPlan[i][key] = val;
-    await updateDoc(doc(db, "plan", "spiele"), { liste: currentPlan });
+    allData[type][i][key] = val;
+    await setDoc(doc(db, "plan", "neue_struktur"), allData);
 };
 
-window.addGame = async () => {
-    if(userRole !== 'admin') return;
-    currentPlan.push({date:"", time:"", hall:"", age:"", note:"", jsr1:"", jsr2:"", jsr3:"", status:"Offen"});
-    await updateDoc(doc(db, "plan", "spiele"), { liste: currentPlan });
+window.addEntry = async (type) => {
+    const newItem = type === "spiele" 
+        ? {date:"", time:"", hall:"", age:"", note:"", jsrs:"", status:"Offen"}
+        : {date:"", time:"", hall:"", name:"", jsrs:"", status:"Offen"};
+    allData[type].push(newItem);
+    await setDoc(doc(db, "plan", "neue_struktur"), allData);
 };
 
-window.deleteGame = async (i) => {
-    if(userRole !== 'admin' || !confirm("Eintrag löschen?")) return;
-    currentPlan.splice(i, 1);
-    await updateDoc(doc(db, "plan", "spiele"), { liste: currentPlan });
+window.deleteEntry = async (type, i) => {
+    if(!confirm("Löschen?")) return;
+    allData[type].splice(i, 1);
+    await setDoc(doc(db, "plan", "neue_struktur"), allData);
 };
 
 function renderDashboard() {
-    const dash = document.getElementById("dashboard");
-    if (!dash) return;
-    const offen = currentPlan.filter(g => g.status === "Offen").length;
-    dash.innerHTML = `
-        <div class="statBox">Gesamt-Spiele: ${currentPlan.length}</div>
-        <div class="statBox" style="color:red; border-color:red;">Noch offen: ${offen}</div>
+    const offeneSpiele = allData.spiele.filter(s => s.status === "Offen").length;
+    const offeneTurniere = allData.turniere.filter(t => t.status === "Offen").length;
+    document.getElementById("dashboard").innerHTML = `
+        <div class="statBox">Offene Spiele: ${offeneSpiele}</div>
+        <div class="statBox">Offene Turniere: ${offeneTurniere}</div>
     `;
 }
 
 window.exportPDF = () => {
     const el = document.getElementById("mainContent");
-    if (el) html2pdf().from(el).save("Schiriplan_Misburg.pdf");
+    html2pdf().from(el).set({ margin: 5, filename: 'JSR-Plan.pdf', html2canvas: { scale: 2 } }).save();
 };
 
 
