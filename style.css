@@ -40,6 +40,28 @@ button { cursor: pointer; border: none; border-radius: 8px; font-weight: bold; }
 @media (max-width: 600px) {
     .dashboard-grid { grid-template-columns: 1fr 1fr; }
 }
+/* Ergänzungen zur bestehenden CSS */
+
+#calendar {
+    max-width: 100%;
+    margin: 0 auto;
+    font-size: 0.9rem;
+}
+
+/* Kalender Styling */
+.fc-header-toolbar {
+    padding: 5px;
+}
+
+.fc-daygrid-event {
+    font-size: 0.75rem !important;
+    white-space: normal !important;
+}
+
+/* Admin-only Element Kontrolle */
+.admin-only {
+    /* Standardmäßig im HTML auf display:none gesetzt */
+}
 
 
 

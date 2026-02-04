@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
 </head>
 <body>
 
@@ -33,7 +34,7 @@
         <div id="dashboard" class="dashboard-grid"></div>
     </div>
 
-    <div class="card chart-card">
+    <div class="card chart-card admin-only" style="display:none;">
         <h3>📊 Einsätze pro Schiedsrichter</h3>
         <div class="chart-container">
             <canvas id="statsChart"></canvas>
@@ -41,9 +42,14 @@
     </div>
 
     <div class="card">
+        <h3>🗓️ Monatsübersicht</h3>
+        <div id="calendar"></div>
+    </div>
+
+    <div class="card">
         <div class="table-header">
             <h3>⚽ Einzelspiele</h3>
-            <button class="admin-only add-small-btn" onclick="addEntry('spiele')">+ Spiel</button>
+            <button class="admin-only add-small-btn" onclick="addEntry('spiele')" style="display:none;">+ Spiel</button>
         </div>
         <div class="table-container">
             <table id="spieleTable">
@@ -58,7 +64,7 @@
                         <th>Schiri 2</th>
                         <th>Bemerkung</th>
                         <th>Status</th>
-                        <th class="admin-only">Aktion</th>
+                        <th class="admin-only" style="display:none;">Aktion</th>
                     </tr>
                 </thead>
                 <tbody></tbody>
@@ -69,7 +75,7 @@
     <div class="card">
         <div class="table-header">
             <h3>🏆 Turniere</h3>
-            <button class="admin-only add-small-btn" onclick="addEntry('turniere')">+ Turnier</button>
+            <button class="admin-only add-small-btn" onclick="addEntry('turniere')" style="display:none;">+ Turnier</button>
         </div>
         <div class="table-container">
             <table id="turnierTable">
@@ -84,7 +90,7 @@
                         <th>Schiri 3</th>
                         <th>Bemerkung</th>
                         <th>Status</th>
-                        <th class="admin-only">Aktion</th>
+                        <th class="admin-only" style="display:none;">Aktion</th>
                     </tr>
                 </thead>
                 <tbody></tbody>
@@ -100,5 +106,4 @@
 <script type="module" src="script.js"></script>
 </body>
 </html>
-
 
