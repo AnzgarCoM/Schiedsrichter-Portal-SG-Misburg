@@ -34,15 +34,15 @@
         <div id="dashboard" class="dashboard-grid"></div>
     </div>
 
-    <div class="card chart-card admin-only" style="display:none;">
+    <div id="adminChartSection" class="card chart-card admin-only" style="display:none;">
         <h3>📊 Einsätze pro Schiedsrichter</h3>
         <div class="chart-container">
             <canvas id="statsChart"></canvas>
         </div>
     </div>
 
-    <div class="card">
-        <h3>🗓️ Monatsübersicht</h3>
+    <div class="card calendar-card">
+        <h3>🗓️ Spielplan Kalender</h3>
         <div id="calendar"></div>
     </div>
 
@@ -55,16 +55,9 @@
             <table id="spieleTable">
                 <thead>
                     <tr>
-                        <th>Datum</th>
-                        <th>Zeit</th>
-                        <th>Halle</th>
-                        <th>Klasse</th>
-                        <th>Heim - Gast</th>
-                        <th>Schiri 1</th>
-                        <th>Schiri 2</th>
-                        <th>Bemerkung</th>
-                        <th>Status</th>
-                        <th class="admin-only" style="display:none;">Aktion</th>
+                        <th>Datum</th><th>Zeit</th><th>Halle</th><th>Klasse</th><th>Heim - Gast</th>
+                        <th>JSR 1</th><th>JSR 2</th><th>Info</th><th>Status</th>
+                        <th class="admin-only" style="display:none;">X</th>
                     </tr>
                 </thead>
                 <tbody></tbody>
@@ -81,16 +74,9 @@
             <table id="turnierTable">
                 <thead>
                     <tr>
-                        <th>Datum</th>
-                        <th>Von-Bis</th>
-                        <th>Halle</th>
-                        <th>Turnier-Name</th>
-                        <th>Schiri 1</th>
-                        <th>Schiri 2</th>
-                        <th>Schiri 3</th>
-                        <th>Bemerkung</th>
-                        <th>Status</th>
-                        <th class="admin-only" style="display:none;">Aktion</th>
+                        <th>Datum</th><th>Zeit</th><th>Halle</th><th>Turnier</th>
+                        <th>JSR 1</th><th>JSR 2</th><th>JSR 3</th><th>Info</th><th>Status</th>
+                        <th class="admin-only" style="display:none;">X</th>
                     </tr>
                 </thead>
                 <tbody></tbody>
@@ -106,4 +92,3 @@
 <script type="module" src="script.js"></script>
 </body>
 </html>
-

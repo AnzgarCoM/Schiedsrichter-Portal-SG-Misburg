@@ -15,45 +15,37 @@ const db = getFirestore(app);
 
 const ADMIN_PW = "admin2025";
 const SCHIRI_PW = "schiri2025";
-let userRole = null;
-let allData = { spiele: [], turniere: [] };
-let myChart = null;
-let calendar = null;
+let userRole = null, allData = { spiele: [], turniere: [] }, myChart = null, calendar = null;
 
 window.handleLogin = function() {
-    const input = document.getElementById("pwInput").value;
-    if (input === ADMIN_PW) { userRole = 'admin'; startApp(); }
-    else if (input === SCHIRI_PW) { userRole = 'schiri'; startApp(); }
+    const pw = document.getElementById("pwInput").value;
+    if (pw === ADMIN_PW) { userRole = 'admin'; startApp(); }
+    else if (pw === SCHIRI_PW) { userRole = 'schiri'; startApp(); }
     else { document.getElementById("errorMsg").innerText = "Falsches Passwort!"; }
 };
 
 function startApp() {
     document.getElementById("loginSection").style.display = "none";
     document.getElementById("mainContent").style.display = "block";
-    document.getElementById("userStatus").innerText = userRole === 'admin' ? "Admin" : "Schiedsrichter";
+    document.getElementById("userStatus").innerText = userRole === 'admin' ? "Modus: Admin" : "Modus: Schiri";
 
-    // Kalender erst beim Start initialisieren
-    initCalendar();
+    // Kalender Setup (Mobile View: listMonth, PC View: dayGridMonth)
+    const calEl = document.getElementById('calendar');
+    calendar = new FullCalendar.Calendar(calEl, {
+        initialView: window.innerWidth < 768 ? 'listMonth' : 'dayGridMonth',
+        locale: 'de',
+        firstDay: 1,
+        headerToolbar: { left: 'prev,next today', center: 'title', right: '' },
+        height: 'auto'
+    });
+    calendar.render();
 
     onSnapshot(doc(db, "plan", "neue_struktur"), (docSnap) => {
         if (docSnap.exists()) {
             allData = docSnap.data();
             renderAll();
-        } else {
-            setDoc(doc(db, "plan", "neue_struktur"), { spiele: [], turniere: [] });
         }
     });
-}
-
-function initCalendar() {
-    const calendarEl = document.getElementById('calendar');
-    calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth',
-        locale: 'de',
-        firstDay: 1,
-        headerToolbar: { left: 'prev,next today', center: 'title', right: '' }
-    });
-    calendar.render();
 }
 
 function renderAll() {
@@ -66,119 +58,46 @@ function renderAll() {
     updateCalendar();
 
     if (userRole === 'admin') {
-        document.querySelectorAll('.admin-only').forEach(el => {
-            el.style.display = (el.tagName === 'TH' || el.tagName === 'TD') ? 'table-cell' : 'block';
-        });
-        updateChart(); // Nur Admin sieht Chart
+        document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'block');
+        updateChart();
     }
 }
 
 function updateCalendar() {
-    if (!calendar) return;
     calendar.removeAllEvents();
-    
-    // Spiele hinzufügen (Blau)
-    allData.spiele.forEach(s => {
-        if (s.date) {
+    allData.spiele.concat(allData.turniere).forEach(item => {
+        if (item.date) {
             calendar.addEvent({
-                title: `${s.time || ''} ${s.age || ''}: ${s.note || ''}`,
-                start: s.date,
-                color: s.status === 'Offen' ? '#f56565' : '#3182ce'
-            });
-        }
-    });
-    
-    // Turniere hinzufügen (Orange)
-    allData.turniere.forEach(t => {
-        if (t.date) {
-            calendar.addEvent({
-                title: `🏆 ${t.name || 'Turnier'}`,
-                start: t.date,
-                color: '#ed8936'
+                title: item.age ? `${item.time} ${item.age}` : `🏆 ${item.name}`,
+                start: item.date,
+                color: item.status === 'Offen' ? '#e53e3e' : '#3182ce'
             });
         }
     });
 }
 
-function updateChart() {
-    const ctx = document.getElementById('statsChart');
-    if (!ctx) return;
-    const stats = {};
-    [...allData.spiele, ...allData.turniere].forEach(item => {
-        [item.jsr1, item.jsr2, item.jsr3].forEach(name => {
-            if (name && name.trim() !== "") {
-                const n = name.trim();
-                stats[n] = (stats[n] || 0) + 1;
-            }
-        });
-    });
-
-    if (myChart) myChart.destroy();
-    
-    // Namen mit Zahl generieren für die Legende
-    const labels = Object.keys(stats).map(name => `${name} (${stats[name]})`);
-    const dataValues = Object.values(stats);
-
-    if (labels.length === 0) return;
-
-    myChart = new Chart(ctx, {
-        type: 'pie',
-        data: {
-            labels: labels,
-            datasets: [{
-                data: dataValues,
-                backgroundColor: ['#4299e1', '#48bb78', '#f6ad55', '#ed64a6', '#9f7aea', '#667eea']
-            }]
-        },
-        options: { 
-            responsive: true, 
-            maintainAspectRatio: false, 
-            plugins: { legend: { position: 'bottom' } } 
-        }
-    });
-}
-
-// REST DER FUNKTIONEN (renderTable, updateRow, addEntry, deleteEntry, renderDashboard, exportPDF) BLEIBEN GLEICH WIE IM VORIGEN POST
 function renderTable(tableId, data, type) {
     const tbody = document.querySelector(`#${tableId} tbody`);
     tbody.innerHTML = "";
-    const isAdmin = (userRole === 'admin');
-
     data.forEach((item, i) => {
         const tr = document.createElement("tr");
-        if (type === "spiele") {
-            tr.innerHTML = `
-                <td><input type="date" value="${item.date||''}" ${!isAdmin?'disabled':''} onchange="updateRow('${type}',${i},'date',this.value)"></td>
-                <td><input type="text" value="${item.time||''}" ${!isAdmin?'disabled':''} onchange="updateRow('${type}',${i},'time',this.value)"></td>
-                <td><input value="${item.hall||''}" ${!isAdmin?'disabled':''} onchange="updateRow('${type}',${i},'hall',this.value)"></td>
-                <td><input value="${item.age||''}" ${!isAdmin?'disabled':''} style="width:60px" onchange="updateRow('${type}',${i},'age',this.value)"></td>
-                <td><input value="${item.note||''}" ${!isAdmin?'disabled':''} onchange="updateRow('${type}',${i},'note',this.value)"></td>
-                <td><input value="${item.jsr1||''}" ${!isAdmin?'disabled':''} placeholder="JSR 1" onchange="updateRow('${type}',${i},'jsr1',this.value)"></td>
-                <td><input value="${item.jsr2||''}" ${!isAdmin?'disabled':''} placeholder="JSR 2" onchange="updateRow('${type}',${i},'jsr2',this.value)"></td>
-                <td><input value="${item.bemerkung||''}" ${!isAdmin?'disabled':''} onchange="updateRow('${type}',${i},'bemerkung',this.value)"></td>
-                <td><select ${!isAdmin?'disabled':''} onchange="updateRow('${type}',${i},'status',this.value)">
-                    <option ${item.status==='Offen'?'selected':''}>Offen</option>
-                    <option ${item.status==='Besetzt'?'selected':''}>Besetzt</option>
-                </select></td>
-                ${isAdmin ? `<td><button onclick="deleteEntry('${type}',${i})" style="color:red; background:none; font-size:18px;">🗑️</button></td>` : ''}
-            `;
-        } else {
-            tr.innerHTML = `
-                <td><input type="date" value="${item.date||''}" ${!isAdmin?'disabled':''} onchange="updateRow('${type}',${i},'date',this.value)"></td>
-                <td><input type="text" value="${item.time||''}" ${!isAdmin?'disabled':''} onchange="updateRow('${type}',${i},'time',this.value)"></td>
-                <td><input value="${item.hall||''}" ${!isAdmin?'disabled':''} onchange="updateRow('${type}',${i},'hall',this.value)"></td>
-                <td><input value="${item.name||''}" ${!isAdmin?'disabled':''} onchange="updateRow('${type}',${i},'name',this.value)"></td>
-                <td><input value="${item.jsr1||''}" ${!isAdmin?'disabled':''} placeholder="JSR 1" onchange="updateRow('${type}',${i},'jsr1',this.value)"></td>
-                <td><input value="${item.jsr2||''}" ${!isAdmin?'disabled':''} placeholder="JSR 2" onchange="updateRow('${type}',${i},'jsr2',this.value)"></td>
-                <td><input value="${item.jsr3||''}" ${!isAdmin?'disabled':''} placeholder="JSR 3" onchange="updateRow('${type}',${i},'jsr3',this.value)"></td>
-                <td><input value="${item.bemerkung||''}" ${!isAdmin?'disabled':''} onchange="updateRow('${type}',${i},'bemerkung',this.value)"></td>
-                <td><select ${!isAdmin?'disabled':''} onchange="updateRow('${type}',${i},'status',this.value)">
-                    <option ${item.status==='Offen'?'selected':''}>Offen</option>
-                    <option ${item.status==='Besetzt'?'selected':''}>Besetzt</option>
-                </select></td>
-                ${isAdmin ? `<td><button onclick="deleteEntry('${type}',${i})" style="color:red; background:none; font-size:18px;">🗑️</button></td>` : ''}
-            `;
-        }
+        const isAdmin = (userRole === 'admin');
+        const fields = type === 'spiele' 
+            ? ['date','time','hall','age','note','jsr1','jsr2','bemerkung']
+            : ['date','time','hall','name','jsr1','jsr2','jsr3','bemerkung'];
+        
+        let html = '';
+        fields.forEach(f => {
+            html += `<td><input type="${f==='date'?'date':'text'}" value="${item[f]||''}" ${!isAdmin?'disabled':''} onchange="updateRow('${type}',${i},'${f}',this.value)"></td>`;
+        });
+        
+        html += `<td><select ${!isAdmin?'disabled':''} onchange="updateRow('${type}',${i},'status',this.value)">
+            <option ${item.status==='Offen'?'selected':''}>Offen</option>
+            <option ${item.status==='Besetzt'?'selected':''}>Besetzt</option>
+        </select></td>`;
+        
+        if(isAdmin) html += `<td><button onclick="deleteEntry('${type}',${i})" style="background:none; border:none; color:red; cursor:pointer;">🗑️</button></td>`;
+        tr.innerHTML = html;
         tbody.appendChild(tr);
     });
 }
@@ -190,31 +109,47 @@ window.updateRow = async (type, i, key, val) => {
 };
 
 window.addEntry = async (type) => {
-    const newItem = type === "spiele" 
-        ? {date:"", time:"", hall:"", age:"", note:"", jsr1:"", jsr2:"", bemerkung:"", status:"Offen"}
-        : {date:"", time:"", hall:"", name:"", jsr1:"", jsr2:"", jsr3:"", bemerkung:"", status:"Offen"};
-    allData[type].push(newItem);
+    const empty = type === 'spiele' 
+        ? {date:"",time:"",hall:"",age:"",note:"",jsr1:"",jsr2:"",bemerkung:"",status:"Offen"}
+        : {date:"",time:"",hall:"",name:"",jsr1:"",jsr2:"",jsr3:"",bemerkung:"",status:"Offen"};
+    allData[type].push(empty);
     await setDoc(doc(db, "plan", "neue_struktur"), allData);
 };
 
 window.deleteEntry = async (type, i) => {
-    if(!confirm("Löschen?")) return;
-    allData[type].splice(i, 1);
-    await setDoc(doc(db, "plan", "neue_struktur"), allData);
+    if(confirm("Löschen?")) {
+        allData[type].splice(i,1);
+        await setDoc(doc(db, "plan", "neue_struktur"), allData);
+    }
 };
 
 function renderDashboard() {
-    const dash = document.getElementById("dashboard");
-    const offeneSpiele = allData.spiele.filter(s => s.status === "Offen").length;
-    const offeneTurniere = allData.turniere.filter(t => t.status === "Offen").length;
+    const offen = allData.spiele.filter(s => s.status === 'Offen').length + allData.turniere.filter(t => t.status === 'Offen').length;
     const gesamt = allData.spiele.length + allData.turniere.length;
-    const offen = offeneSpiele + offeneTurniere;
-
-    dash.innerHTML = `
-        <div class="stat-card blue-card"><span class="stat-num">${gesamt}</span><span class="stat-label">Termine</span></div>
-        <div class="stat-card ${offen > 0 ? 'red-card' : 'green-card'}"><span class="stat-num">${offen}</span><span class="stat-label">Dringend</span></div>
-        <div class="stat-card green-card"><span class="stat-num">${gesamt - offen}</span><span class="stat-label">Besetzt</span></div>
+    document.getElementById("dashboard").innerHTML = `
+        <div class="stat-card blue-card"><span class="stat-num">${gesamt}</span>Gesamt</div>
+        <div class="stat-card ${offen>0?'red-card':'green-card'}"><span class="stat-num">${offen}</span>Offen</div>
+        <div class="stat-card green-card"><span class="stat-num">${gesamt-offen}</span>Besetzt</div>
     `;
+}
+
+function updateChart() {
+    const stats = {};
+    allData.spiele.concat(allData.turniere).forEach(item => {
+        [item.jsr1, item.jsr2, item.jsr3].forEach(name => {
+            if(name && name.trim()) stats[name.trim()] = (stats[name.trim()]||0) + 1;
+        });
+    });
+    const ctx = document.getElementById('statsChart');
+    if (myChart) myChart.destroy();
+    myChart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: Object.keys(stats).map(n => `${n} (${stats[n]})`),
+            datasets: [{ data: Object.values(stats), backgroundColor: ['#3182ce','#38a169','#e53e3e','#ecc94b','#9f7aea','#ed8936'] }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+    });
 }
 
 window.exportPDF = () => {
