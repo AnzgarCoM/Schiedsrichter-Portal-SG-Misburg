@@ -64,8 +64,6 @@ function renderAll() {
 
 function updateCalendar() {
     calendar.removeAllEvents();
-    
-    // Spiele hinzufügen
     allData.spiele.forEach(s => {
         if (s.date) {
             const schiris = [s.jsr1, s.jsr2].filter(n => n).join(" & ");
@@ -76,8 +74,6 @@ function updateCalendar() {
             });
         }
     });
-
-    // Turniere hinzufügen
     allData.turniere.forEach(t => {
         if (t.date) {
             const schiris = [t.jsr1, t.jsr2, t.jsr3].filter(n => n).join(", ");
@@ -97,8 +93,9 @@ function renderTable(tableId, data, type) {
 
     data.forEach((item, i) => {
         const tr = document.createElement("tr");
+        // HIER: 'note' wurde bei spiele entfernt
         const fields = type === 'spiele' 
-            ? ['date','time','hall','age','note','jsr1','jsr2','bemerkung']
+            ? ['date','time','hall','age','jsr1','jsr2','bemerkung']
             : ['date','time','hall','name','jsr1','jsr2','jsr3','bemerkung'];
         
         let html = '';
@@ -107,7 +104,7 @@ function renderTable(tableId, data, type) {
             html += `<td><input type="${f==='date'?'date':'text'}" value="${item[f]||''}" ${!isAdmin?'disabled':''} placeholder="${ph}" onchange="updateRow('${type}',${i},'${f}',this.value)"></td>`;
         });
         
-        html += `<td><select ${!isAdmin?'disabled':''} onchange="updateRow('${type}',${i},'status',this.value)">
+        html += `<td class="status-col"><select ${!isAdmin?'disabled':''} onchange="updateRow('${type}',${i},'status',this.value)">
             <option ${item.status==='Offen'?'selected':''}>Offen</option>
             <option ${item.status==='Besetzt'?'selected':''}>Besetzt</option>
         </select></td>`;
@@ -126,14 +123,14 @@ window.updateRow = async (type, i, key, val) => {
 
 window.addEntry = async (type) => {
     const empty = type === 'spiele' 
-        ? {date:"",time:"",hall:"",age:"",note:"",jsr1:"",jsr2:"",bemerkung:"",status:"Offen"}
+        ? {date:"",time:"",hall:"",age:"",jsr1:"",jsr2:"",bemerkung:"",status:"Offen"}
         : {date:"",time:"",hall:"",name:"",jsr1:"",jsr2:"",jsr3:"",bemerkung:"",status:"Offen"};
     allData[type].push(empty);
     await setDoc(doc(db, "plan", "neue_struktur"), allData);
 };
 
 window.deleteEntry = async (type, i) => {
-    if(confirm("Diesen Eintrag wirklich löschen?")) {
+    if(confirm("Löschen?")) {
         allData[type].splice(i,1);
         await setDoc(doc(db, "plan", "neue_struktur"), allData);
     }
@@ -171,5 +168,5 @@ function updateChart() {
 
 window.exportPDF = () => {
     const el = document.getElementById("mainContent");
-    html2pdf().from(el).set({ margin: 5, filename: 'JSR_Plan_Misburg.pdf', html2canvas: { scale: 2 } }).save();
+    html2pdf().from(el).set({ margin: 5, filename: 'JSR_Plan.pdf', html2canvas: { scale: 2 } }).save();
 };
