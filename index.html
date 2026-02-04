@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSR Portal - Live Cloud</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+
+<header>
+    <h1>Jung-Schiedsrichter Portal</h1>
+</header>
+
+<div id="loginSection">
+    <div class="card login-card">
+        <h2>Interner Login</h2>
+        <p>Gib das Vereins-Passwort ein:</p>
+        <input type="password" id="pwInput" placeholder="Passwort...">
+        <button onclick="handleLogin()" class="full-btn">Anmelden</button>
+        <p id="errorMsg" class="error-msg"></p>
+    </div>
+</div>
+
+<div id="mainContent" style="display:none;">
+    <div class="user-bar">
+        <span id="userStatus"></span>
+        <button onclick="location.reload()" class="logout-btn">Abmelden</button>
+    </div>
+
+    <div class="card">
+        <div id="dashboard"></div>
+    </div>
+
+    <div class="card">
+        <div class="table-container">
+            <table id="mainTable">
+                <thead>
+                    <tr>
+                        <th>Datum</th>
+                        <th>Zeit</th>
+                        <th>Halle</th>
+                        <th>Klasse</th>
+                        <th>Paarung</th>
+                        <th>JSR 1</th>
+                        <th>JSR 2</th>
+                        <th>JSR 3</th>
+                        <th>Status</th>
+                        <th class="admin-only">Aktion</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+        <button class="admin-only full-btn" onclick="addGame()" style="margin-top:15px; background:#0033a0;">+ Neues Spiel hinzufügen</button>
+    </div>
+
+    <div class="card">
+        <button class="export-btn" onclick="exportPDF()">Als PDF speichern</button>
+    </div>
+</div>
+
+<script type="module" src="script.js"></script>
+</body>
+</html>
+
+
