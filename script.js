@@ -27,9 +27,8 @@ window.handleLogin = function() {
 function startApp() {
     document.getElementById("loginSection").style.display = "none";
     document.getElementById("mainContent").style.display = "block";
-    document.getElementById("userStatus").innerText = userRole === 'admin' ? "Modus: Admin" : "Modus: Schiri";
+    document.getElementById("userStatus").innerText = userRole === 'admin' ? "Modus: Admin" : "Modus: Schiedsrichter";
 
-    // Kalender Setup (Mobile View: listMonth, PC View: dayGridMonth)
     const calEl = document.getElementById('calendar');
     calendar = new FullCalendar.Calendar(calEl, {
         initialView: window.innerWidth < 768 ? 'listMonth' : 'dayGridMonth',
@@ -65,12 +64,27 @@ function renderAll() {
 
 function updateCalendar() {
     calendar.removeAllEvents();
-    allData.spiele.concat(allData.turniere).forEach(item => {
-        if (item.date) {
+    
+    // Spiele hinzufügen
+    allData.spiele.forEach(s => {
+        if (s.date) {
+            const schiris = [s.jsr1, s.jsr2].filter(n => n).join(" & ");
             calendar.addEvent({
-                title: item.age ? `${item.time} ${item.age}` : `🏆 ${item.name}`,
-                start: item.date,
-                color: item.status === 'Offen' ? '#e53e3e' : '#3182ce'
+                title: `${s.time || ''} | ${s.age || ''} | ${s.hall || ''}\nJSR: ${schiris || 'Offen'}`,
+                start: s.date,
+                color: s.status === 'Offen' ? '#e53e3e' : '#3182ce'
+            });
+        }
+    });
+
+    // Turniere hinzufügen
+    allData.turniere.forEach(t => {
+        if (t.date) {
+            const schiris = [t.jsr1, t.jsr2, t.jsr3].filter(n => n).join(", ");
+            calendar.addEvent({
+                title: `🏆 ${t.name || 'Turnier'}\n${t.time || ''} | ${t.hall || ''}\nJSR: ${schiris || 'Offen'}`,
+                start: t.date,
+                color: '#ed8936'
             });
         }
     });
@@ -79,16 +93,18 @@ function updateCalendar() {
 function renderTable(tableId, data, type) {
     const tbody = document.querySelector(`#${tableId} tbody`);
     tbody.innerHTML = "";
+    const isAdmin = (userRole === 'admin');
+
     data.forEach((item, i) => {
         const tr = document.createElement("tr");
-        const isAdmin = (userRole === 'admin');
         const fields = type === 'spiele' 
             ? ['date','time','hall','age','note','jsr1','jsr2','bemerkung']
             : ['date','time','hall','name','jsr1','jsr2','jsr3','bemerkung'];
         
         let html = '';
         fields.forEach(f => {
-            html += `<td><input type="${f==='date'?'date':'text'}" value="${item[f]||''}" ${!isAdmin?'disabled':''} onchange="updateRow('${type}',${i},'${f}',this.value)"></td>`;
+            let ph = f.startsWith('jsr') ? 'JSR Name' : '';
+            html += `<td><input type="${f==='date'?'date':'text'}" value="${item[f]||''}" ${!isAdmin?'disabled':''} placeholder="${ph}" onchange="updateRow('${type}',${i},'${f}',this.value)"></td>`;
         });
         
         html += `<td><select ${!isAdmin?'disabled':''} onchange="updateRow('${type}',${i},'status',this.value)">
@@ -96,7 +112,7 @@ function renderTable(tableId, data, type) {
             <option ${item.status==='Besetzt'?'selected':''}>Besetzt</option>
         </select></td>`;
         
-        if(isAdmin) html += `<td><button onclick="deleteEntry('${type}',${i})" style="background:none; border:none; color:red; cursor:pointer;">🗑️</button></td>`;
+        if(isAdmin) html += `<td><button onclick="deleteEntry('${type}',${i})" style="background:none; border:none; color:red; cursor:pointer; font-size:1.2rem;">🗑️</button></td>`;
         tr.innerHTML = html;
         tbody.appendChild(tr);
     });
@@ -117,7 +133,7 @@ window.addEntry = async (type) => {
 };
 
 window.deleteEntry = async (type, i) => {
-    if(confirm("Löschen?")) {
+    if(confirm("Diesen Eintrag wirklich löschen?")) {
         allData[type].splice(i,1);
         await setDoc(doc(db, "plan", "neue_struktur"), allData);
     }
@@ -135,13 +151,14 @@ function renderDashboard() {
 
 function updateChart() {
     const stats = {};
-    allData.spiele.concat(allData.turniere).forEach(item => {
+    [...allData.spiele, ...allData.turniere].forEach(item => {
         [item.jsr1, item.jsr2, item.jsr3].forEach(name => {
             if(name && name.trim()) stats[name.trim()] = (stats[name.trim()]||0) + 1;
         });
     });
     const ctx = document.getElementById('statsChart');
     if (myChart) myChart.destroy();
+    if (Object.keys(stats).length === 0) return;
     myChart = new Chart(ctx, {
         type: 'pie',
         data: {
@@ -154,5 +171,5 @@ function updateChart() {
 
 window.exportPDF = () => {
     const el = document.getElementById("mainContent");
-    html2pdf().from(el).set({ margin: 5, filename: 'JSR_Plan.pdf', html2canvas: { scale: 2 } }).save();
+    html2pdf().from(el).set({ margin: 5, filename: 'JSR_Plan_Misburg.pdf', html2canvas: { scale: 2 } }).save();
 };

@@ -26,8 +26,10 @@
 
 <div id="mainContent" style="display:none;">
     <div class="user-bar">
-        <span id="userStatus">Status...</span>
-        <button onclick="location.reload()" class="logout-btn">Logout</button>
+        <span id="userStatus" style="font-weight: bold; color: #2d3748;">Status...</span>
+        <button onclick="location.reload()" class="logout-btn">
+            <span>Abmelden</span> 🚪
+        </button>
     </div>
 
     <div class="card no-border">
@@ -41,8 +43,8 @@
         </div>
     </div>
 
-    <div class="card calendar-card">
-        <h3>🗓️ Spielplan Kalender</h3>
+    <div class="card">
+        <h3>🗓️ Spielplan Übersicht</h3>
         <div id="calendar"></div>
     </div>
 
@@ -56,7 +58,7 @@
                 <thead>
                     <tr>
                         <th>Datum</th><th>Zeit</th><th>Halle</th><th>Klasse</th><th>Heim - Gast</th>
-                        <th>JSR 1</th><th>JSR 2</th><th>Info</th><th>Status</th>
+                        <th>JSR 1</th><th>JSR 2</th><th>Bemerkung</th><th>Status</th>
                         <th class="admin-only" style="display:none;">X</th>
                     </tr>
                 </thead>
@@ -74,8 +76,8 @@
             <table id="turnierTable">
                 <thead>
                     <tr>
-                        <th>Datum</th><th>Zeit</th><th>Halle</th><th>Turnier</th>
-                        <th>JSR 1</th><th>JSR 2</th><th>JSR 3</th><th>Info</th><th>Status</th>
+                        <th>Datum</th><th>Von-Bis</th><th>Halle</th><th>Turnier-Name</th>
+                        <th>JSR 1</th><th>JSR 2</th><th>JSR 3</th><th>Bemerkung</th><th>Status</th>
                         <th class="admin-only" style="display:none;">X</th>
                     </tr>
                 </thead>
