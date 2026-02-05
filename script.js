@@ -21,20 +21,16 @@ window.handleLogin = function() {
     const pw = document.getElementById("pwInput").value;
     if (pw === ADMIN_PW) { userRole = 'admin'; startApp(); }
     else if (pw === SCHIRI_PW) { userRole = 'schiri'; startApp(); }
-    else { document.getElementById("errorMsg").innerText = "Falsches Passwort!"; }
+    else { document.getElementById("errorMsg").innerText = "Falsch!"; }
 };
 
 function startApp() {
     document.getElementById("loginSection").style.display = "none";
     document.getElementById("mainContent").style.display = "block";
-    document.getElementById("userStatus").innerText = userRole === 'admin' ? "Modus: Admin" : "Modus: Schiedsrichter";
-
-    const calEl = document.getElementById('calendar');
-    calendar = new FullCalendar.Calendar(calEl, {
-        initialView: window.innerWidth < 768 ? 'listMonth' : 'dayGridMonth',
+    
+    calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
+        initialView: window.innerWidth < 800 ? 'listMonth' : 'dayGridMonth',
         locale: 'de',
-        firstDay: 1,
-        headerToolbar: { left: 'prev,next today', center: 'title', right: '' },
         height: 'auto'
     });
     calendar.render();
@@ -51,67 +47,60 @@ function renderAll() {
     allData.spiele.sort((a,b) => new Date(a.date) - new Date(b.date));
     allData.turniere.sort((a,b) => new Date(a.date) - new Date(b.date));
 
+    // PC Render
     renderTable("spieleTable", allData.spiele, "spiele");
     renderTable("turnierTable", allData.turniere, "turniere");
-    renderDashboard();
-    updateCalendar();
 
-    if (userRole === 'admin') {
-        document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'block');
+    // Mobile Render
+    renderMobileCards("spieleMobile", allData.spiele, "spiele");
+    renderMobileCards("turniereMobile", allData.turniere, "turniere");
+
+    updateDashboard();
+    updateCalendar();
+    if(userRole === 'admin') {
+        document.querySelectorAll('.admin-only').forEach(e => e.style.display = 'block');
         updateChart();
     }
 }
 
-function updateCalendar() {
-    calendar.removeAllEvents();
-    allData.spiele.forEach(s => {
-        if (s.date) {
-            const schiris = [s.jsr1, s.jsr2].filter(n => n).join(" & ");
-            calendar.addEvent({
-                title: `${s.time || ''} | ${s.age || ''} | ${s.hall || ''}\nJSR: ${schiris || 'Offen'}`,
-                start: s.date,
-                color: s.status === 'Offen' ? '#e53e3e' : '#3182ce'
-            });
-        }
-    });
-    allData.turniere.forEach(t => {
-        if (t.date) {
-            const schiris = [t.jsr1, t.jsr2, t.jsr3].filter(n => n).join(", ");
-            calendar.addEvent({
-                title: `🏆 ${t.name || 'Turnier'}\n${t.time || ''} | ${t.hall || ''}\nJSR: ${schiris || 'Offen'}`,
-                start: t.date,
-                color: '#ed8936'
-            });
-        }
-    });
-}
-
-function renderTable(tableId, data, type) {
-    const tbody = document.querySelector(`#${tableId} tbody`);
+function renderTable(id, data, type) {
+    const tbody = document.querySelector(`#${id} tbody`);
     tbody.innerHTML = "";
-    const isAdmin = (userRole === 'admin');
-
     data.forEach((item, i) => {
         const tr = document.createElement("tr");
-        const fields = type === 'spiele' 
-            ? ['date','time','hall','age','jsr1','jsr2','bemerkung']
-            : ['date','time','hall','name','jsr1','jsr2','jsr3','bemerkung'];
+        const isAdmin = userRole === 'admin';
+        const fields = type === 'spiele' ? ['date','time','hall','age','jsr1','jsr2','bemerkung'] : ['date','time','hall','name','jsr1','jsr2','jsr3','bemerkung'];
         
         let html = '';
         fields.forEach(f => {
-            let ph = f.startsWith('jsr') ? 'JSR Name' : (f === 'time' ? 'Uhrzeit' : '');
-            let extraClass = (f === 'time') ? 'class="time-col"' : '';
-            html += `<td ${extraClass}><input type="${f==='date'?'date':'text'}" value="${item[f]||''}" ${!isAdmin?'disabled':''} placeholder="${ph}" onchange="updateRow('${type}',${i},'${f}',this.value)"></td>`;
+            html += `<td><input type="${f==='date'?'date':'text'}" value="${item[f]||''}" ${!isAdmin?'disabled':''} onchange="updateRow('${type}',${i},'${f}',this.value)"></td>`;
         });
-        
         html += `<td class="status-col"><select ${!isAdmin?'disabled':''} onchange="updateRow('${type}',${i},'status',this.value)">
             <option value="Offen" ${item.status==='Offen'?'selected':''}>Offen</option>
             <option value="Besetzt" ${item.status==='Besetzt'?'selected':''}>Besetzt</option>
         </select></td>`;
-        
-        if(isAdmin) html += `<td><button onclick="deleteEntry('${type}',${i})" style="background:none; border:none; color:red; cursor:pointer; font-size:1.2rem;">🗑️</button></td>`;
+        if(isAdmin) html += `<td><button onclick="deleteEntry('${type}',${i})">🗑️</button></td>`;
         tr.innerHTML = html;
         tbody.appendChild(tr);
+    });
+}
+
+function renderMobileCards(containerId, data, type) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = "";
+    data.forEach((item, i) => {
+        const div = document.createElement("div");
+        div.className = `mobile-card ${item.status === 'Offen' ? 'offen' : 'besetzt'}`;
+        const fields = type === 'spiele' ? [['Datum','date','date'],['Zeit','time','text'],['Halle','hall','text'],['Klasse','age','text'],['JSR 1','jsr1','text'],['JSR 2','jsr2','text']] : [['Datum','date','date'],['Zeit','time','text'],['Halle','hall','text'],['Turnier','name','text'],['JSR 1','jsr1','text'],['JSR 2','jsr2','text'],['JSR 3','jsr3','text']];
+        
+        let h = `<div class="card-grid">`;
+        fields.forEach(f => {
+            h += `<div class="card-item"><label>${f[0]}</label><input type="${f[2]}" value="${item[f[1]]||''}" ${userRole!=='admin'?'disabled':''} onchange="updateRow('${type}',${i},'${f[1]}',this.value)"></div>`;
+        });
+        h += `<div class="card-item full"><label>Status</label><select ${userRole!=='admin'?'disabled':''} onchange="updateRow('${type}',${i},'status',this.value)"><option value="Offen" ${item.status==='Offen'?'selected':''}>Offen</option><option value="Besetzt" ${item.status==='Besetzt'?'selected':''}>Besetzt</option></select></div></div>`;
+        if(userRole==='admin') h += `<span class="delete-btn-mobile" onclick="deleteEntry('${type}',${i})">🗑️</span>`;
+        div.innerHTML = h;
+        container.appendChild(div);
     });
 }
 
@@ -122,51 +111,44 @@ window.updateRow = async (type, i, key, val) => {
 };
 
 window.addEntry = async (type) => {
-    const empty = type === 'spiele' 
-        ? {date:"",time:"",hall:"",age:"",jsr1:"",jsr2:"",bemerkung:"",status:"Offen"}
-        : {date:"",time:"",hall:"",name:"",jsr1:"",jsr2:"",jsr3:"",bemerkung:"",status:"Offen"};
+    const empty = type === 'spiele' ? {date:"",time:"",hall:"",age:"",jsr1:"",jsr2:"",bemerkung:"",status:"Offen"} : {date:"",time:"",hall:"",name:"",jsr1:"",jsr2:"",jsr3:"",bemerkung:"",status:"Offen"};
     allData[type].push(empty);
     await setDoc(doc(db, "plan", "neue_struktur"), allData);
 };
 
 window.deleteEntry = async (type, i) => {
-    if(confirm("Diesen Eintrag wirklich löschen?")) {
-        allData[type].splice(i,1);
-        await setDoc(doc(db, "plan", "neue_struktur"), allData);
-    }
+    if(confirm("Löschen?")) { allData[type].splice(i,1); await setDoc(doc(db, "plan", "neue_struktur"), allData); }
 };
 
-function renderDashboard() {
+function updateDashboard() {
     const offen = allData.spiele.filter(s => s.status === 'Offen').length + allData.turniere.filter(t => t.status === 'Offen').length;
     const gesamt = allData.spiele.length + allData.turniere.length;
-    document.getElementById("dashboard").innerHTML = `
-        <div class="stat-card blue-card"><span class="stat-num">${gesamt}</span>Gesamt</div>
-        <div class="stat-card ${offen>0?'red-card':'green-card'}"><span class="stat-num">${offen}</span>Offen</div>
-        <div class="stat-card green-card"><span class="stat-num">${gesamt-offen}</span>Besetzt</div>
-    `;
+    document.getElementById("dashboard").innerHTML = `<div class="stat-card blue-card"><span>${gesamt}</span><br>Gesamt</div><div class="stat-card ${offen>0?'red-card':'green-card'}"><span>${offen}</span><br>Offen</div><div class="stat-card green-card"><span>${gesamt-offen}</span><br>Besetzt</div>`;
+}
+
+function updateCalendar() {
+    calendar.removeAllEvents();
+    allData.spiele.concat(allData.turniere).forEach(item => {
+        if(item.date) calendar.addEvent({ title: (item.age || item.name) + " - " + (item.jsr1 || "Offen"), start: item.date, color: item.status === 'Offen' ? '#e53e3e' : '#3182ce' });
+    });
 }
 
 function updateChart() {
     const stats = {};
-    [...allData.spiele, ...allData.turniere].forEach(item => {
+    allData.spiele.concat(allData.turniere).forEach(item => {
         [item.jsr1, item.jsr2, item.jsr3].forEach(name => {
             if(name && name.trim()) stats[name.trim()] = (stats[name.trim()]||0) + 1;
         });
     });
     const ctx = document.getElementById('statsChart');
     if (myChart) myChart.destroy();
-    if (Object.keys(stats).length === 0) return;
     myChart = new Chart(ctx, {
         type: 'pie',
-        data: {
-            labels: Object.keys(stats).map(n => `${n} (${stats[n]})`),
-            datasets: [{ data: Object.values(stats), backgroundColor: ['#3182ce','#38a169','#e53e3e','#ecc94b','#9f7aea','#ed8936'] }]
-        },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+        data: { labels: Object.keys(stats).map(n => `${n} (${stats[n]})`), datasets: [{ data: Object.values(stats), backgroundColor: ['#3182ce','#38a169','#e53e3e','#ecc94b','#9f7aea','#ed8936'] }] },
+        options: { responsive: true, maintainAspectRatio: false }
     });
 }
 
 window.exportPDF = () => {
-    const el = document.getElementById("mainContent");
-    html2pdf().from(el).set({ margin: 5, filename: 'JSR_Plan.pdf', html2canvas: { scale: 2 } }).save();
+    html2pdf().from(document.getElementById("mainContent")).set({ margin: 5, filename: 'JSR_Plan.pdf' }).save();
 };
