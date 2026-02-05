@@ -17,13 +17,11 @@ const ADMIN_PW = "admin2025";
 const SCHIRI_PW = "schiri2025";
 let userRole = null, allData = { spiele: [], turniere: [] }, myChart = null, calendar = null;
 
-// Online-Status Tracker
 window.addEventListener('online', updateOnlineStatus);
 window.addEventListener('offline', updateOnlineStatus);
 function updateOnlineStatus() {
     const dot = document.getElementById('onlineIndicator');
-    if(navigator.onLine) { dot.className = 'status-dot online'; }
-    else { dot.className = 'status-dot offline'; }
+    if(dot) dot.className = navigator.onLine ? 'status-dot online' : 'status-dot offline';
 }
 
 window.handleLogin = function() {
@@ -38,13 +36,18 @@ function startApp() {
     document.getElementById("mainContent").style.display = "block";
     updateOnlineStatus();
 
-    const isMobile = window.innerWidth < 800;
+    const isMobile = window.innerWidth < 850;
     calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
         initialView: isMobile ? 'listMonth' : 'dayGridMonth',
         locale: 'de',
         height: 'auto',
-        headerToolbar: { left: 'prev,next today', center: 'title', right: isMobile ? '' : 'dayGridMonth,listMonth' },
-        eventClick: (info) => alert(info.event.title)
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: isMobile ? '' : 'dayGridMonth,listMonth'
+        },
+        buttonText: { today: 'Heute', month: 'Monat', list: 'Liste' },
+        eventClick: (info) => alert("Details:\n" + info.event.title)
     });
     calendar.render();
 
@@ -88,7 +91,7 @@ function renderTable(id, data, type) {
             <option value="Offen" ${item.status==='Offen'?'selected':''}>Offen</option>
             <option value="Besetzt" ${item.status==='Besetzt'?'selected':''}>Besetzt</option>
         </select></td>`;
-        if(isAdmin) html += `<td><button onclick="deleteEntry('${type}',${i})">🗑️</button></td>`;
+        if(isAdmin) html += `<td><button onclick="deleteEntry('${type}',${i})" style="border:none; background:none; cursor:pointer;">🗑️</button></td>`;
         tr.innerHTML = html;
         tbody.appendChild(tr);
     });
@@ -125,7 +128,7 @@ window.addEntry = async (type) => {
 };
 
 window.deleteEntry = async (type, i) => {
-    if(confirm("Löschen?")) { allData[type].splice(i,1); await setDoc(doc(db, "plan", "neue_struktur"), allData); }
+    if(confirm("Eintrag wirklich löschen?")) { allData[type].splice(i,1); await setDoc(doc(db, "plan", "neue_struktur"), allData); }
 };
 
 function updateDashboard() {
@@ -137,7 +140,15 @@ function updateDashboard() {
 function updateCalendar() {
     calendar.removeAllEvents();
     allData.spiele.concat(allData.turniere).forEach(item => {
-        if(item.date) calendar.addEvent({ title: (item.age || item.name || 'Spiel') + " - " + (item.jsr1 || "Offen"), start: item.date, color: item.status === 'Offen' ? '#e53e3e' : '#3182ce' });
+        if(item.date) {
+            const label = item.age || item.name || 'Spiel';
+            const jsrs = [item.jsr1, item.jsr2, item.jsr3].filter(n => n).join(" & ") || "Offen";
+            calendar.addEvent({ 
+                title: `${item.time || ''} | ${label} | JSR: ${jsrs}`, 
+                start: item.date, 
+                color: item.status === 'Offen' ? '#e53e3e' : '#3182ce' 
+            });
+        }
     });
 }
 
@@ -156,5 +167,6 @@ function updateChart() {
 }
 
 window.exportPDF = () => {
-    html2pdf().from(document.getElementById("mainContent")).set({ margin: 5, filename: 'JSR_Plan_Misburg.pdf' }).save();
+    const el = document.getElementById("mainContent");
+    html2pdf().from(el).set({ margin: 5, filename: 'JSR_Plan_Misburg.pdf', html2canvas: { scale: 2 } }).save();
 };
