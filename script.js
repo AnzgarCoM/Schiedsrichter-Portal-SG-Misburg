@@ -93,20 +93,20 @@ function renderTable(tableId, data, type) {
 
     data.forEach((item, i) => {
         const tr = document.createElement("tr");
-        // HIER: 'note' wurde bei spiele entfernt
         const fields = type === 'spiele' 
             ? ['date','time','hall','age','jsr1','jsr2','bemerkung']
             : ['date','time','hall','name','jsr1','jsr2','jsr3','bemerkung'];
         
         let html = '';
         fields.forEach(f => {
-            let ph = f.startsWith('jsr') ? 'JSR Name' : '';
-            html += `<td><input type="${f==='date'?'date':'text'}" value="${item[f]||''}" ${!isAdmin?'disabled':''} placeholder="${ph}" onchange="updateRow('${type}',${i},'${f}',this.value)"></td>`;
+            let ph = f.startsWith('jsr') ? 'JSR Name' : (f === 'time' ? 'Uhrzeit' : '');
+            let extraClass = (f === 'time') ? 'class="time-col"' : '';
+            html += `<td ${extraClass}><input type="${f==='date'?'date':'text'}" value="${item[f]||''}" ${!isAdmin?'disabled':''} placeholder="${ph}" onchange="updateRow('${type}',${i},'${f}',this.value)"></td>`;
         });
         
         html += `<td class="status-col"><select ${!isAdmin?'disabled':''} onchange="updateRow('${type}',${i},'status',this.value)">
-            <option ${item.status==='Offen'?'selected':''}>Offen</option>
-            <option ${item.status==='Besetzt'?'selected':''}>Besetzt</option>
+            <option value="Offen" ${item.status==='Offen'?'selected':''}>Offen</option>
+            <option value="Besetzt" ${item.status==='Besetzt'?'selected':''}>Besetzt</option>
         </select></td>`;
         
         if(isAdmin) html += `<td><button onclick="deleteEntry('${type}',${i})" style="background:none; border:none; color:red; cursor:pointer; font-size:1.2rem;">🗑️</button></td>`;
@@ -130,7 +130,7 @@ window.addEntry = async (type) => {
 };
 
 window.deleteEntry = async (type, i) => {
-    if(confirm("Löschen?")) {
+    if(confirm("Diesen Eintrag wirklich löschen?")) {
         allData[type].splice(i,1);
         await setDoc(doc(db, "plan", "neue_struktur"), allData);
     }
