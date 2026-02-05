@@ -26,7 +26,10 @@
 
 <div id="mainContent" style="display:none;">
     <div class="user-bar">
-        <span id="userStatus">Status...</span>
+        <div class="user-info">
+            <span id="userStatus">Status...</span>
+            <span id="onlineIndicator" class="status-dot"></span>
+        </div>
         <button onclick="location.reload()" class="logout-btn">Abmelden 🚪</button>
     </div>
 
@@ -47,7 +50,7 @@
     <div class="section-container">
         <div class="table-header-flex">
             <h3>⚽ Einzelspiele</h3>
-            <button class="admin-only add-btn" onclick="addEntry('spiele')" style="display:none;">+ Spiel hinzufügen</button>
+            <button class="admin-only add-btn" onclick="addEntry('spiele')" style="display:none;">+ Spiel</button>
         </div>
         <div class="desktop-view table-container">
             <table id="spieleTable">
@@ -65,7 +68,7 @@
     <div class="section-container">
         <div class="table-header-flex">
             <h3>🏆 Turniere</h3>
-            <button class="admin-only add-btn" onclick="addEntry('turniere')" style="display:none;">+ Turnier hinzufügen</button>
+            <button class="admin-only add-btn" onclick="addEntry('turniere')" style="display:none;">+ Turnier</button>
         </div>
         <div class="desktop-view table-container">
             <table id="turnierTable">

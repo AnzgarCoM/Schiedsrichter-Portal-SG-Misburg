@@ -4,10 +4,14 @@ header { background: #0033a0; color: white; padding: 20px; text-align: center; }
 .card { background: white; margin: 10px auto; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); width: 94%; max-width: 1200px; box-sizing: border-box; }
 .no-border { background: transparent; box-shadow: none; }
 .section-container { margin: 20px auto; width: 94%; max-width: 1200px; }
-.table-header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.table-header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding: 0 5px; }
 
-/* --- USER BAR STICKY --- */
+/* --- USER BAR & ONLINE STATUS --- */
 .user-bar { background: #fff; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #edf2f7; position: sticky; top: 0; z-index: 1000; }
+.user-info { display: flex; align-items: center; gap: 10px; font-weight: bold; }
+.status-dot { width: 12px; height: 12px; border-radius: 50%; background: #cbd5e0; display: inline-block; }
+.status-dot.online { background: #38a169; box-shadow: 0 0 8px #38a169; }
+.status-dot.offline { background: #e53e3e; box-shadow: 0 0 8px #e53e3e; }
 .logout-btn { background: #fff; color: #e53e3e; border: 1px solid #e53e3e; padding: 6px 15px; border-radius: 20px; font-weight: bold; cursor: pointer; }
 
 /* --- DESKTOP TABELLE --- */
@@ -16,33 +20,30 @@ table { width: 100%; border-collapse: collapse; min-width: 1000px; }
 th { background: #f7fafc; padding: 12px; text-align: left; position: sticky; top: 0; z-index: 10; font-size: 12px; }
 td { padding: 10px; border-bottom: 1px solid #edf2f7; }
 .status-col { width: 160px; }
-.time-col { min-width: 150px; }
+.time-col { min-width: 160px !important; }
 
-/* --- MOBILE CARDS (Standardmäßig versteckt) --- */
+/* --- MOBILE CARDS --- */
 .mobile-view { display: none; }
 .mobile-card { background: white; margin-bottom: 15px; padding: 15px; border-radius: 12px; border-left: 6px solid #cbd5e0; box-shadow: 0 2px 5px rgba(0,0,0,0.1); position: relative; }
 .mobile-card.offen { border-left-color: #e53e3e; }
 .mobile-card.besetzt { border-left-color: #38a169; }
 .card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .card-item { margin-bottom: 8px; }
-.card-item label { display: block; font-size: 10px; color: #718096; text-transform: uppercase; }
+.card-item label { display: block; font-size: 10px; color: #718096; text-transform: uppercase; margin-bottom: 2px; }
 .card-item.full { grid-column: span 2; }
-.delete-btn-mobile { position: absolute; top: 10px; right: 10px; color: #e53e3e; font-size: 1.2rem; }
-
-/* --- STATUS FARBEN --- */
-select:has(option[value="Offen"]:checked) { color: #e53e3e; font-weight: bold; }
-select:has(option[value="Besetzt"]:checked) { color: #38a169; font-weight: bold; }
+.delete-btn-mobile { position: absolute; top: 10px; right: 10px; color: #e53e3e; font-size: 1.2rem; cursor: pointer; }
 
 /* --- RESPONSIVE SWITCH --- */
 @media (max-width: 850px) {
-    .desktop-view { display: none; } /* Tabelle weg */
-    .mobile-view { display: block; } /* Karten her */
-    .dashboard-grid { grid-template-columns: 1fr 1fr 1fr; }
+    .desktop-view { display: none; }
+    .mobile-view { display: block; }
+    .fc-header-toolbar { flex-direction: column; gap: 10px; }
 }
 
 /* --- ALLGEMEIN --- */
-input, select { padding: 8px; border: 1px solid #cbd5e0; border-radius: 6px; width: 100%; box-sizing: border-box; }
+input, select { padding: 10px; border: 1px solid #cbd5e0; border-radius: 6px; width: 100%; box-sizing: border-box; font-size: 14px; }
 .full-btn { background: #0033a0; color: white; border: none; padding: 15px; border-radius: 8px; font-weight: bold; cursor: pointer; }
 .add-btn { background: #3182ce; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; }
+#calendar { background: white; padding: 10px; border-radius: 12px; margin-top: 10px; }
 
 

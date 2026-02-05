@@ -2,12 +2,12 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyC27vfNJL-mxl5wtg69WsWPkaceEP6yUjs",
-  authDomain: "jsr-1-d3000.firebaseapp.com",
-  projectId: "jsr-1-d3000",
-  storageBucket: "jsr-1-d3000.firebasestorage.app",
-  messagingSenderId: "909465128275",
-  appId: "1:909465128275:web:7729bcda224ae767ff65a6"
+    apiKey: "AIzaSyC27vfNJL-mxl5wtg69WsWPkaceEP6yUjs",
+    authDomain: "jsr-1-d3000.firebaseapp.com",
+    projectId: "jsr-1-d3000",
+    storageBucket: "jsr-1-d3000.firebasestorage.app",
+    messagingSenderId: "909465128275",
+    appId: "1:909465128275:web:7729bcda224ae767ff65a6"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -17,21 +17,34 @@ const ADMIN_PW = "admin2025";
 const SCHIRI_PW = "schiri2025";
 let userRole = null, allData = { spiele: [], turniere: [] }, myChart = null, calendar = null;
 
+// Online-Status Tracker
+window.addEventListener('online', updateOnlineStatus);
+window.addEventListener('offline', updateOnlineStatus);
+function updateOnlineStatus() {
+    const dot = document.getElementById('onlineIndicator');
+    if(navigator.onLine) { dot.className = 'status-dot online'; }
+    else { dot.className = 'status-dot offline'; }
+}
+
 window.handleLogin = function() {
     const pw = document.getElementById("pwInput").value;
     if (pw === ADMIN_PW) { userRole = 'admin'; startApp(); }
     else if (pw === SCHIRI_PW) { userRole = 'schiri'; startApp(); }
-    else { document.getElementById("errorMsg").innerText = "Falsch!"; }
+    else { document.getElementById("errorMsg").innerText = "Passwort falsch!"; }
 };
 
 function startApp() {
     document.getElementById("loginSection").style.display = "none";
     document.getElementById("mainContent").style.display = "block";
-    
+    updateOnlineStatus();
+
+    const isMobile = window.innerWidth < 800;
     calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
-        initialView: window.innerWidth < 800 ? 'listMonth' : 'dayGridMonth',
+        initialView: isMobile ? 'listMonth' : 'dayGridMonth',
         locale: 'de',
-        height: 'auto'
+        height: 'auto',
+        headerToolbar: { left: 'prev,next today', center: 'title', right: isMobile ? '' : 'dayGridMonth,listMonth' },
+        eventClick: (info) => alert(info.event.title)
     });
     calendar.render();
 
@@ -47,11 +60,8 @@ function renderAll() {
     allData.spiele.sort((a,b) => new Date(a.date) - new Date(b.date));
     allData.turniere.sort((a,b) => new Date(a.date) - new Date(b.date));
 
-    // PC Render
     renderTable("spieleTable", allData.spiele, "spiele");
     renderTable("turnierTable", allData.turniere, "turniere");
-
-    // Mobile Render
     renderMobileCards("spieleMobile", allData.spiele, "spiele");
     renderMobileCards("turniereMobile", allData.turniere, "turniere");
 
@@ -70,7 +80,6 @@ function renderTable(id, data, type) {
         const tr = document.createElement("tr");
         const isAdmin = userRole === 'admin';
         const fields = type === 'spiele' ? ['date','time','hall','age','jsr1','jsr2','bemerkung'] : ['date','time','hall','name','jsr1','jsr2','jsr3','bemerkung'];
-        
         let html = '';
         fields.forEach(f => {
             html += `<td><input type="${f==='date'?'date':'text'}" value="${item[f]||''}" ${!isAdmin?'disabled':''} onchange="updateRow('${type}',${i},'${f}',this.value)"></td>`;
@@ -91,8 +100,7 @@ function renderMobileCards(containerId, data, type) {
     data.forEach((item, i) => {
         const div = document.createElement("div");
         div.className = `mobile-card ${item.status === 'Offen' ? 'offen' : 'besetzt'}`;
-        const fields = type === 'spiele' ? [['Datum','date','date'],['Zeit','time','text'],['Halle','hall','text'],['Klasse','age','text'],['JSR 1','jsr1','text'],['JSR 2','jsr2','text']] : [['Datum','date','date'],['Zeit','time','text'],['Halle','hall','text'],['Turnier','name','text'],['JSR 1','jsr1','text'],['JSR 2','jsr2','text'],['JSR 3','jsr3','text']];
-        
+        const fields = type === 'spiele' ? [['Datum','date','date'],['Zeit','time','text'],['Halle','hall','text'],['Klasse','age', 'text'],['JSR 1','jsr1','text'],['JSR 2','jsr2','text']] : [['Datum','date','date'],['Von-Bis','time','text'],['Halle','hall','text'],['Name','name','text'],['JSR 1','jsr1','text'],['JSR 2','jsr2','text'],['JSR 3','jsr3','text']];
         let h = `<div class="card-grid">`;
         fields.forEach(f => {
             h += `<div class="card-item"><label>${f[0]}</label><input type="${f[2]}" value="${item[f[1]]||''}" ${userRole!=='admin'?'disabled':''} onchange="updateRow('${type}',${i},'${f[1]}',this.value)"></div>`;
@@ -129,16 +137,14 @@ function updateDashboard() {
 function updateCalendar() {
     calendar.removeAllEvents();
     allData.spiele.concat(allData.turniere).forEach(item => {
-        if(item.date) calendar.addEvent({ title: (item.age || item.name) + " - " + (item.jsr1 || "Offen"), start: item.date, color: item.status === 'Offen' ? '#e53e3e' : '#3182ce' });
+        if(item.date) calendar.addEvent({ title: (item.age || item.name || 'Spiel') + " - " + (item.jsr1 || "Offen"), start: item.date, color: item.status === 'Offen' ? '#e53e3e' : '#3182ce' });
     });
 }
 
 function updateChart() {
     const stats = {};
     allData.spiele.concat(allData.turniere).forEach(item => {
-        [item.jsr1, item.jsr2, item.jsr3].forEach(name => {
-            if(name && name.trim()) stats[name.trim()] = (stats[name.trim()]||0) + 1;
-        });
+        [item.jsr1, item.jsr2, item.jsr3].forEach(name => { if(name && name.trim()) stats[name.trim()] = (stats[name.trim()]||0) + 1; });
     });
     const ctx = document.getElementById('statsChart');
     if (myChart) myChart.destroy();
@@ -150,5 +156,5 @@ function updateChart() {
 }
 
 window.exportPDF = () => {
-    html2pdf().from(document.getElementById("mainContent")).set({ margin: 5, filename: 'JSR_Plan.pdf' }).save();
+    html2pdf().from(document.getElementById("mainContent")).set({ margin: 5, filename: 'JSR_Plan_Misburg.pdf' }).save();
 };
