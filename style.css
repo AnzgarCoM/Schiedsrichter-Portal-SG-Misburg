@@ -1,56 +1,56 @@
-/* --- BASIS & LAYOUT --- */
-body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f0f2f5; margin: 0; padding-bottom: 50px; }
-header { background: #0033a0; color: white; padding: 20px; text-align: center; }
+/* --- BASIS --- */
+body { font-family: -apple-system, sans-serif; background: #f0f2f5; margin: 0; padding-bottom: 50px; color: #1a202c; }
+header { background: #0033a0; color: white; padding: 20px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+
+/* --- DASHBOARD OBEN ZENTRIERT --- */
+.dashboard-container { width: 100%; display: flex; justify-content: center; margin: 15px 0; }
+.dashboard-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 94%; max-width: 800px; }
+.stat-card { padding: 15px 5px; border-radius: 12px; text-align: center; color: white; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+.stat-num { display: block; font-size: 1.6rem; }
+.stat-label { font-size: 0.7rem; text-transform: uppercase; opacity: 0.9; }
+
+.blue-card { background: linear-gradient(135deg, #3182ce, #2c5282); }
+.red-card { background: linear-gradient(135deg, #e53e3e, #9b2c2c); }
+.green-card { background: linear-gradient(135deg, #38a169, #276749); }
+
+/* --- USER BAR --- */
+.user-bar { background: #fff; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #edf2f7; position: sticky; top: 0; z-index: 1000; }
+.status-dot { width: 10px; height: 10px; border-radius: 50%; background: #cbd5e0; display: inline-block; margin-left: 5px; }
+.status-dot.online { background: #38a169; box-shadow: 0 0 8px #38a169; }
+.status-dot.offline { background: #e53e3e; }
+.logout-btn { background: #fff; color: #e53e3e; border: 1px solid #e53e3e; padding: 6px 15px; border-radius: 20px; font-weight: bold; cursor: pointer; }
+
+/* --- TABELLEN & KARTEN --- */
 .card { background: white; margin: 10px auto; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); width: 94%; max-width: 1200px; box-sizing: border-box; }
 .no-border { background: transparent; box-shadow: none; }
 .section-container { margin: 20px auto; width: 94%; max-width: 1200px; }
-.table-header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding: 0 5px; }
+.table-header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
 
-/* --- USER BAR & ONLINE STATUS --- */
-.user-bar { background: #fff; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #edf2f7; position: sticky; top: 0; z-index: 1000; }
-.user-info { display: flex; align-items: center; gap: 10px; font-weight: bold; }
-.status-dot { width: 12px; height: 12px; border-radius: 50%; background: #cbd5e0; }
-.status-dot.online { background: #38a169; box-shadow: 0 0 8px #38a169; }
-.status-dot.offline { background: #e53e3e; box-shadow: 0 0 8px #e53e3e; }
-.logout-btn { background: #fff; color: #e53e3e; border: 1px solid #e53e3e; padding: 6px 15px; border-radius: 20px; font-weight: bold; cursor: pointer; }
-
-/* --- DESKTOP TABELLE --- */
-.table-container { background: white; border-radius: 12px; overflow-x: auto; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+.table-container { background: white; border-radius: 12px; overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; min-width: 1000px; }
-th { background: #f7fafc; padding: 12px; text-align: left; position: sticky; top: 0; z-index: 10; font-size: 12px; color: #4a5568; }
+th { background: #f7fafc; padding: 12px; text-align: left; font-size: 12px; color: #4a5568; position: sticky; top: 0; }
 td { padding: 10px; border-bottom: 1px solid #edf2f7; }
-.status-col { width: 160px; }
-.time-col { min-width: 165px !important; } /* Platz für "08:00 - 18:00" */
+.time-col { min-width: 165px !important; }
 
-/* --- MOBILE CARDS --- */
+/* --- MOBILE --- */
 .mobile-view { display: none; }
-.mobile-card { background: white; margin-bottom: 15px; padding: 15px; border-radius: 12px; border-left: 6px solid #cbd5e0; box-shadow: 0 2px 5px rgba(0,0,0,0.1); position: relative; }
+.mobile-card { background: white; margin-bottom: 15px; padding: 15px; border-radius: 12px; border-left: 6px solid #ccc; box-shadow: 0 2px 5px rgba(0,0,0,0.1); position: relative; }
 .mobile-card.offen { border-left-color: #e53e3e; }
 .mobile-card.besetzt { border-left-color: #38a169; }
 .card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.card-item { margin-bottom: 8px; }
-.card-item label { display: block; font-size: 10px; color: #718096; text-transform: uppercase; margin-bottom: 2px; }
+.card-item label { display: block; font-size: 10px; color: #718096; text-transform: uppercase; }
 .card-item.full { grid-column: span 2; }
-.delete-btn-mobile { position: absolute; top: 10px; right: 10px; color: #e53e3e; font-size: 1.2rem; cursor: pointer; }
 
-/* --- KALENDER OPTIMIERUNG --- */
-#calendar { background: white; padding: 10px; border-radius: 12px; margin-top: 10px; min-height: 350px; }
-.fc-list-event { cursor: pointer; font-size: 14px; }
-.fc-list-event-title { font-weight: bold !important; }
-
-/* --- RESPONSIVE SWITCH --- */
 @media (max-width: 850px) {
     .desktop-view { display: none; }
     .mobile-view { display: block; }
-    .fc-header-toolbar { flex-direction: column; gap: 12px; align-items: center; }
-    .fc-toolbar-title { font-size: 1.2rem !important; }
+    .fc-header-toolbar { flex-direction: column; gap: 10px; }
 }
 
-/* --- ALLGEMEIN --- */
-input, select { padding: 10px; border: 1px solid #cbd5e0; border-radius: 6px; width: 100%; box-sizing: border-box; font-size: 14px; background: #fcfcfc; }
-input:focus { border-color: #3182ce; outline: none; background: white; }
+/* --- ELEMENTE --- */
+input, select { padding: 10px; border: 1px solid #cbd5e0; border-radius: 6px; width: 100%; box-sizing: border-box; font-size: 14px; }
 .full-btn { background: #0033a0; color: white; border: none; padding: 15px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; }
 .add-btn { background: #3182ce; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; }
-.export-btn { background: #2f855a; margin-top: 10px; }
+#calendar { background: white; padding: 10px; border-radius: 12px; }
 
 

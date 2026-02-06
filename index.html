@@ -1,5 +1,7 @@
 <!DOCTYPE html>
 <html lang="de">
+<!DOCTYPE html>
+<html lang="de">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -33,12 +35,12 @@
         <button onclick="location.reload()" class="logout-btn">Abmelden 🚪</button>
     </div>
 
-    <div class="card no-border">
+    <div class="dashboard-container">
         <div id="dashboard" class="dashboard-grid"></div>
     </div>
 
     <div id="adminChartSection" class="card admin-only" style="display:none;">
-        <h3>📊 Statistik</h3>
+        <h3>📊 Schiri-Verteilung</h3>
         <div class="chart-container"><canvas id="statsChart"></canvas></div>
     </div>
 
@@ -84,7 +86,7 @@
     </div>
 
     <div class="card">
-        <button class="export-btn full-btn" onclick="exportPDF()">Als PDF speichern</button>
+        <button class="export-btn full-btn" onclick="exportPDF()">Plan als PDF speichern</button>
     </div>
 </div>
 
