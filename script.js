@@ -2,14 +2,14 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getFirestore, doc, onSnapshot, setDoc, collection, query } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-// Deine Firebase Konfiguration
+// --- DEINE NEUE FIREBASE KONFIGURATION ---
 const firebaseConfig = {
-    apiKey: "AIzaSyCdFAyOvZb05CEXfVezonRUMvN4zb9xcoo",
-    authDomain: "test-jsr1.firebaseapp.com",
-    projectId: "test-jsr1",
-    storageBucket: "test-jsr1.firebasestorage.app",
-    messagingSenderId: "25804824117",
-    appId: "1:25804824117:web:f6c2c1430c6227807fdb7c"
+    apiKey: "HIER_DEIN_NEUER_API_KEY_EINTRAGEN", // Bitte aus den Firebase-Einstellungen kopieren
+    authDomain: "jsr-1-d3000.firebaseapp.com",
+    projectId: "jsr-1-d3000",
+    storageBucket: "jsr-1-d3000.firebasestorage.app",
+    messagingSenderId: "HIER_NEUE_SENDER_ID_EINTRAGEN", // Bitte aus den Firebase-Einstellungen kopieren
+    appId: "HIER_NEUE_APP_ID_EINTRAGEN" // Bitte aus den Firebase-Einstellungen kopieren
 };
 
 const app = initializeApp(firebaseConfig);
@@ -21,7 +21,7 @@ const ADMIN_EMAIL = "sgmisburgjsr@outlook.de";
 const WHATSAPP_NUMMER = "4915204500763"; 
 
 let currentUserInfo = null;
-let userRole = null; // 'admin', 'schiri' oder 'unapproved'
+let userRole = null; // Mögliche Werte: 'admin', 'schiri' oder 'unapproved'
 let isLoginMode = true;
 let allData = { spiele: [] };
 let allUsers = [];
@@ -69,7 +69,7 @@ window.handleRegister = () => {
     createUserWithEmailAndPassword(auth, email, pw)
         .then(async (cred) => {
             const isAdmin = (email.toLowerCase() === ADMIN_EMAIL.toLowerCase());
-            // Nutzerdatenbank in Firestore befüllen. Admin wird automatisch freigeschaltet.
+            // Nutzerprofil in Firestore erstellen. Der Admin wird direkt freigeschaltet.
             await setDoc(doc(db, "users", cred.user.uid), {
                 uid: cred.user.uid,
                 name: name,
@@ -83,10 +83,10 @@ window.handleRegister = () => {
 
 window.handleLogout = () => signOut(auth).then(() => location.reload());
 
-// --- AUTOMATISCHE PRÜFUNG DES AUTH-STATUS ---
+// --- AUTOMATISCHE ÜBERWACHUNG DES AUTH-STATUS ---
 onAuthStateChanged(auth, (user) => {
     if (user) {
-        // Holen der Benutzerdaten aus Firestore, um die Freischaltung zu verifizieren
+        // Holen des aktuellen Benutzerprofils aus Firestore, um die Freischaltung zu verifizieren
         onSnapshot(doc(db, "users", user.uid), (userSnap) => {
             if (userSnap.exists()) {
                 currentUserInfo = userSnap.data();
@@ -108,11 +108,11 @@ onAuthStateChanged(auth, (user) => {
     }
 });
 
-// --- PORTAL STARTEN ---
+// --- PORTAL-ANWENDUNG STARTEN ---
 function startApp() {
     document.getElementById("loginSection").style.display = "none";
     
-    // Fall: Account registriert, aber noch gesperrt / nicht freigeschaltet
+    // Fall: Der Account ist registriert, wurde aber vom Admin noch nicht freigegeben
     if (userRole === 'unapproved') {
         document.getElementById("approvalWaitSection").style.display = "block";
         document.getElementById("mainContent").style.display = "none";
@@ -130,7 +130,7 @@ function startApp() {
     
     if (userRole === 'admin') {
         document.querySelectorAll('.admin-only').forEach(e => e.style.display = 'block');
-        // Admin lädt zusätzlich die Benutzerliste zur Account-Freigabe
+        // Admin lädt live die Benutzerliste zur Account-Freigabe
         onSnapshot(query(collection(db, "users")), (snaps) => {
             allUsers = [];
             snaps.forEach(d => allUsers.push(d.data()));
@@ -150,14 +150,14 @@ function startApp() {
     });
 }
 
-// --- ADMIN: RENDERN DER SCHIEDSRICHTER-FREIGABE-TABELLE ---
+// --- ADMIN: SCHIEDSRICHTER FREISCHALTEN (TABELLE RENDERN) ---
 function renderUsersTable() {
     const tbody = document.querySelector("#usersTable tbody");
     if (!tbody) return;
     tbody.innerHTML = "";
 
     allUsers.forEach((u) => {
-        if (u.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) return; // Admin filtert sich selbst heraus
+        if (u.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) return; // Der Admin wird hier nicht aufgeführt
         
         const tr = document.createElement("tr");
         tr.innerHTML = `
@@ -180,14 +180,14 @@ window.updateUserApproval = async (uid, val) => {
     await setDoc(doc(db, "users", uid), { approved: isApproved }, { merge: true });
 };
 
-// --- RENDERN DES SPIELPLANS (MIT AUTO-ARCHIV) ---
+// --- SPIELPLAN RENDERN (MIT AUTO-ARCHIV FÜR ABGELAUFENE TERMINEN) ---
 function renderSpieleTable() {
     const tbody = document.querySelector("#spieleTable tbody");
     tbody.innerHTML = "";
     const isAdmin = (userRole === 'admin');
     const heute = new Date().toISOString().split('T')[0];
 
-    // Chronologische Vorsortierung: Datum aufsteigend, danach Uhrzeit aufsteigend
+    // Chronologische Sortierung: Zuerst nach Datum, bei gleichem Datum nach Uhrzeit
     let anzeigeListe = [...allData.spiele].sort((a, b) => {
         if (a.date !== b.date) return new Date(a.date) - new Date(b.date);
         return (a.time || "").localeCompare(b.time || "");
@@ -197,7 +197,7 @@ function renderSpieleTable() {
     anzeigeListe = anzeigeListe.filter(s => s.date >= heute);
 
     anzeigeListe.forEach((item) => {
-        // Originalen Index im Haupt-Array für die korrekte Firebase-Zuweisung ermitteln
+        // Den ursprünglichen Index im originalen Datenarray für Updates ermitteln
         const realIdx = allData.spiele.indexOf(item);
         const tr = document.createElement("tr");
         if (item.age && item.age.toLowerCase().includes("turnier")) tr.classList.add("is-tournament");
@@ -226,7 +226,7 @@ function renderSpieleTable() {
     });
 }
 
-// --- DATEN-SYNCHRONISATION MIT FIRESTORE ---
+// --- SYNCHRONISATION DER ÄNDERUNGEN MIT DEINER FEUERBASE-DATENBANK ---
 window.updateRow = async (idx, key, val) => {
     if (userRole !== 'admin') return;
     allData.spiele[idx][key] = val;
@@ -241,22 +241,22 @@ window.addEntry = async () => {
 };
 
 window.deleteEntry = async (idx) => {
-    if (confirm("Dieses Spiel wirklich unwiderruflich löschen?")) {
+    if (confirm("Dieses Spiel wirklich unwiderruflich aus der Datenbank löschen?")) {
         allData.spiele.splice(idx, 1);
         await setDoc(DOC_REF, { spiele: allData.spiele });
     }
 };
 
-// --- WHATSAPP-INTEGRATION MIT AUTOMATISCHEM NAMEN ---
+// --- WHATSAPP-VERSAND (NAME WIRD AUTOMATISCH MITÜBERMITTELT) ---
 window.sendWhatsApp = (d, t, h, a) => {
     const meinName = currentUserInfo ? currentUserInfo.name : "Ein Schiedsrichter";
     const msg = encodeURIComponent(`Hallo! Hier ist ${meinName}.\nIch möchte mich für folgendes Spiel pfeifen melden:\n\n📅 Datum: ${d}\n⏰ Zeit: ${t} Uhr\n🏢 Halle: ${h}\n⚽ Spiel/Turnier: ${a}\n\nIst das Spiel noch frei und kann ich eingeteilt werden?`);
     window.open(`https://wa.me/${WHATSAPP_NUMMER}?text=${msg}`, '_blank');
 };
 
-// --- DASHBOARD (ZÄHLT AUCH VERGANGENE/ALTE SPIELE MIT) ---
+// --- SAISON-DASHBOARD (STATISTIK ZÄHLT AUCH VERGANGENE SPIELE) ---
 function updateDashboard() {
-    // Greift auf die Gesamtlänge des Arrays zu (inkl. alte Termine in der DB)
+    // Greift immer auf allData.spiele zurück – dort bleiben alte Spiele erhalten und zählen voll mit!
     const gesamtSpiele = allData.spiele.length;
     const offen = allData.spiele.filter(s => s.status === 'Offen').length;
     const besetzt = gesamtSpiele - offen;
