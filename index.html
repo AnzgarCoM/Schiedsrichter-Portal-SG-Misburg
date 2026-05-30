@@ -1,95 +1,87 @@
 <!DOCTYPE html>
 <html lang="de">
-<!DOCTYPE html>
-<html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JSR Portal - SG Misburg</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
 </head>
 <body>
+    <header>
+        <h1>⚽ JSR Portal</h1>
+        <button id="logoutBtn" onclick="handleLogout()" class="logout-btn" style="display:none;">Abmelden</button>
+    </header>
 
-<header>
-    <h1>JSR Portal - SG Misburg</h1>
-</header>
-
-<div id="loginSection">
-    <div class="card login-card">
-        <h2>Interner Login</h2>
-        <input type="password" id="pwInput" placeholder="Passwort...">
-        <button onclick="handleLogin()" class="full-btn">Anmelden</button>
-        <p id="errorMsg" class="error-msg"></p>
-    </div>
-</div>
-
-<div id="mainContent" style="display:none;">
-    <div class="user-bar">
-        <div class="user-info">
-            <span id="userStatus">Status...</span>
-            <span id="onlineIndicator" class="status-dot"></span>
+    <div id="loginSection" class="card" style="max-width:350px; text-align:center; margin-top:80px;">
+        <h2 id="authTitle">Anmelden</h2>
+        
+        <input type="text" id="nameInput" placeholder="Vor- und Nachname" style="margin-bottom:10px; display:none;">
+        <input type="email" id="emailInput" placeholder="E-Mail" style="margin-bottom:10px;">
+        <input type="password" id="pwInput" placeholder="Passwort" style="margin-bottom:20px;">
+        
+        <div id="authButtons">
+            <button id="mainAuthBtn" onclick="handleLogin()" class="add-btn" style="width:100%; margin-bottom:15px;">Einloggen</button>
+            <button id="toggleAuthBtn" onclick="toggleAuthMode()" style="background:none; border:none; color:var(--primary-blue); cursor:pointer; font-size:0.9rem;">
+                Noch kein Konto? Hier registrieren
+            </button>
         </div>
-        <button onclick="location.reload()" class="logout-btn">Abmelden 🚪</button>
     </div>
 
-    <div class="dashboard-container">
-        <div id="dashboard" class="dashboard-grid"></div>
+    <div id="approvalWaitSection" class="card" style="display:none; max-width:500px; text-align:center; margin-top:80px;">
+        <h2>⏳ Konto wird geprüft</h2>
+        <p>Dein Account wurde erfolgreich erstellt. Ein Administrator muss deinen Zugang manuell freischalten, bevor du den Spielplan einsehen kannst.</p>
+        <p>Bitte wende dich an die JSR-Leitung des Vereins.</p>
     </div>
 
-    <div id="adminChartSection" class="card admin-only" style="display:none;">
-        <h3>📊 Schiri-Verteilung</h3>
-        <div class="chart-container"><canvas id="statsChart"></canvas></div>
-    </div>
-
-    <div class="card">
-        <h3>🗓️ Spielplan Kalender</h3>
-        <div id="calendar"></div>
-    </div>
-
-    <div class="section-container">
-        <div class="table-header-flex">
-            <h3>⚽ Einzelspiele</h3>
-            <button class="admin-only add-btn" onclick="addEntry('spiele')" style="display:none;">+ Spiel</button>
+    <div id="mainContent" style="display:none;">
+        
+        <div class="card">
+            <div id="userStatus" style="margin-bottom:15px; font-weight:bold; color:var(--primary-blue);"></div>
+            <div id="dashboard" class="dashboard-grid"></div>
         </div>
-        <div class="desktop-view table-container">
-            <table id="spieleTable">
-                <thead>
-                    <tr>
-                        <th>Datum</th><th>Zeit</th><th>Halle</th><th>Klasse</th><th>JSR 1</th><th>JSR 2</th><th>Bemerkung</th><th class="status-col">Status</th><th class="admin-only">X</th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
+
+        <div class="card admin-only" style="display:none; margin-bottom:20px;">
+            <h3 style="margin-top:0;">👥 Schiedsrichter freischalten / verwalten</h3>
+            <div class="table-container">
+                <table id="usersTable">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>E-Mail</th>
+                            <th>Status / Freigabe</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
         </div>
-        <div id="spieleMobile" class="mobile-view"></div>
+
+        <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <h3 style="margin:0;">📅 Aktueller Spiel- & Turnierplan</h3>
+                <button class="admin-only add-btn" onclick="addEntry()" style="display:none;">+ Neues Spiel hinzufügen</button>
+            </div>
+            <div class="table-container">
+                <table id="spieleTable">
+                    <thead>
+                        <tr>
+                            <th>Datum</th>
+                            <th>Zeit</th>
+                            <th>Halle</th>
+                            <th>Spiel / Turnier</th>
+                            <th>JSR 1</th>
+                            <th>JSR 2</th>
+                            <th>Status</th>
+                            <th>Aktion</th>
+                            <th class="admin-only"></th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
-    <div class="section-container">
-        <div class="table-header-flex">
-            <h3>🏆 Turniere</h3>
-            <button class="admin-only add-btn" onclick="addEntry('turniere')" style="display:none;">+ Turnier</button>
-        </div>
-        <div class="desktop-view table-container">
-            <table id="turnierTable">
-                <thead>
-                    <tr>
-                        <th>Datum</th><th class="time-col">Von-Bis</th><th>Halle</th><th>Turnier</th><th>JSR 1</th><th>JSR 2</th><th>JSR 3</th><th>Bemerkung</th><th class="status-col">Status</th><th class="admin-only">X</th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
-        </div>
-        <div id="turniereMobile" class="mobile-view"></div>
-    </div>
-
-    <div class="card">
-        <button class="export-btn full-btn" onclick="exportPDF()">Plan als PDF speichern</button>
-    </div>
-</div>
-
-<script type="module" src="script.js"></script>
+    <script type="module" src="script.js"></script>
 </body>
 </html>
