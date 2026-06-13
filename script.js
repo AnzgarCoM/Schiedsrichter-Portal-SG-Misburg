@@ -2,14 +2,15 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getFirestore, doc, onSnapshot, setDoc, collection, query } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-// --- DEINE NEUE FIREBASE KONFIGURATION ---
+// --- DEINE ECHTEN, KORREKTEN FIREBASE ZUGANGSDATEN ---
 const firebaseConfig = {
-    apiKey: "HIER_DEIN_NEUER_API_KEY_EINTRAGEN", // Bitte aus den Firebase-Einstellungen kopieren
+    apiKey: "AIzaSyC27vfNJL-mxl5wtg69WsWPkaceEP6yUjs",
     authDomain: "jsr-1-d3000.firebaseapp.com",
     projectId: "jsr-1-d3000",
     storageBucket: "jsr-1-d3000.firebasestorage.app",
-    messagingSenderId: "HIER_NEUE_SENDER_ID_EINTRAGEN", // Bitte aus den Firebase-Einstellungen kopieren
-    appId: "HIER_NEUE_APP_ID_EINTRAGEN" // Bitte aus den Firebase-Einstellungen kopieren
+    messagingSenderId: "909465128275",
+    appId: "1:909465128275:web:7729bcda224ae767ff65a6",
+    measurementId: "G-1M0XS7JMGW"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -21,7 +22,7 @@ const ADMIN_EMAIL = "sgmisburgjsr@outlook.de";
 const WHATSAPP_NUMMER = "4915204500763"; 
 
 let currentUserInfo = null;
-let userRole = null; // Mögliche Werte: 'admin', 'schiri' oder 'unapproved'
+let userRole = null; // 'admin', 'schiri' oder 'unapproved'
 let isLoginMode = true;
 let allData = { spiele: [] };
 let allUsers = [];
@@ -51,7 +52,7 @@ window.toggleAuthMode = () => {
 
 // --- AUTHENTIFIZIERUNGS-AKTIONEN ---
 window.handleLogin = () => {
-    const email = document.getElementById("emailInput").value.trim();
+    const email = document.getElementById("emailInput").value.trim().toLowerCase();
     const pw = document.getElementById("pwInput").value;
     if (!email || !pw) return alert("Bitte alle Felder ausfüllen.");
     signInWithEmailAndPassword(auth, email, pw).catch(e => alert("Login-Fehler: " + e.message));
@@ -59,7 +60,7 @@ window.handleLogin = () => {
 
 window.handleRegister = () => {
     const name = document.getElementById("nameInput").value.trim();
-    const email = document.getElementById("emailInput").value.trim();
+    const email = document.getElementById("emailInput").value.trim().toLowerCase();
     const pw = document.getElementById("pwInput").value;
     
     if (!name) return alert("Bitte gib deinen echten Vor- und Nachnamen an.");
@@ -68,8 +69,7 @@ window.handleRegister = () => {
 
     createUserWithEmailAndPassword(auth, email, pw)
         .then(async (cred) => {
-            const isAdmin = (email.toLowerCase() === ADMIN_EMAIL.toLowerCase());
-            // Nutzerprofil in Firestore erstellen. Der Admin wird direkt freigeschaltet.
+            const isAdmin = (email === ADMIN_EMAIL.toLowerCase());
             await setDoc(doc(db, "users", cred.user.uid), {
                 uid: cred.user.uid,
                 name: name,
@@ -86,7 +86,6 @@ window.handleLogout = () => signOut(auth).then(() => location.reload());
 // --- AUTOMATISCHE ÜBERWACHUNG DES AUTH-STATUS ---
 onAuthStateChanged(auth, (user) => {
     if (user) {
-        // Holen des aktuellen Benutzerprofils aus Firestore, um die Freischaltung zu verifizieren
         onSnapshot(doc(db, "users", user.uid), (userSnap) => {
             if (userSnap.exists()) {
                 currentUserInfo = userSnap.data();
@@ -97,6 +96,9 @@ onAuthStateChanged(auth, (user) => {
                 } else {
                     userRole = 'unapproved';
                 }
+                startApp();
+            } else {
+                userRole = 'unapproved';
                 startApp();
             }
         });
@@ -112,7 +114,6 @@ onAuthStateChanged(auth, (user) => {
 function startApp() {
     document.getElementById("loginSection").style.display = "none";
     
-    // Fall: Der Account ist registriert, wurde aber vom Admin noch nicht freigegeben
     if (userRole === 'unapproved') {
         document.getElementById("approvalWaitSection").style.display = "block";
         document.getElementById("mainContent").style.display = "none";
@@ -125,12 +126,11 @@ function startApp() {
     document.getElementById("logoutBtn").style.display = "block";
     
     document.getElementById("userStatus").innerText = userRole === 'admin' 
-        ? `👑 Admin-Modus (${currentUserInfo.name})` 
-        : `🏃 JSR-Bereich (Eingeloggt als: ${currentUserInfo.name})`;
+        ? `👑 Admin-Modus (${currentUserInfo?.name || 'Admin'})` 
+        : `🏃 JSR-Bereich (Eingeloggt als: ${currentUserInfo?.name || 'Schiedsrichter'})`;
     
     if (userRole === 'admin') {
         document.querySelectorAll('.admin-only').forEach(e => e.style.display = 'block');
-        // Admin lädt live die Benutzerliste zur Account-Freigabe
         onSnapshot(query(collection(db, "users")), (snaps) => {
             allUsers = [];
             snaps.forEach(d => allUsers.push(d.data()));
@@ -150,14 +150,14 @@ function startApp() {
     });
 }
 
-// --- ADMIN: SCHIEDSRICHTER FREISCHALTEN (TABELLE RENDERN) ---
+// --- ADMIN: SCHIEDSRICHTER FREISCHALTEN ---
 function renderUsersTable() {
     const tbody = document.querySelector("#usersTable tbody");
     if (!tbody) return;
     tbody.innerHTML = "";
 
     allUsers.forEach((u) => {
-        if (u.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) return; // Der Admin wird hier nicht aufgeführt
+        if (u.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) return; 
         
         const tr = document.createElement("tr");
         tr.innerHTML = `
@@ -180,24 +180,21 @@ window.updateUserApproval = async (uid, val) => {
     await setDoc(doc(db, "users", uid), { approved: isApproved }, { merge: true });
 };
 
-// --- SPIELPLAN RENDERN (MIT AUTO-ARCHIV FÜR ABGELAUFENE TERMINEN) ---
+// --- SPIELPLAN RENDERN (MIT AUTO-ARCHIV) ---
 function renderSpieleTable() {
     const tbody = document.querySelector("#spieleTable tbody");
     tbody.innerHTML = "";
     const isAdmin = (userRole === 'admin');
     const heute = new Date().toISOString().split('T')[0];
 
-    // Chronologische Sortierung: Zuerst nach Datum, bei gleichem Datum nach Uhrzeit
     let anzeigeListe = [...allData.spiele].sort((a, b) => {
         if (a.date !== b.date) return new Date(a.date) - new Date(b.date);
         return (a.time || "").localeCompare(b.time || "");
     });
 
-    // AUTO-ARCHIV: Blendet vergangene Spiele für die Benutzeroberfläche aus
     anzeigeListe = anzeigeListe.filter(s => s.date >= heute);
 
     anzeigeListe.forEach((item) => {
-        // Den ursprünglichen Index im originalen Datenarray für Updates ermitteln
         const realIdx = allData.spiele.indexOf(item);
         const tr = document.createElement("tr");
         if (item.age && item.age.toLowerCase().includes("turnier")) tr.classList.add("is-tournament");
@@ -226,7 +223,6 @@ function renderSpieleTable() {
     });
 }
 
-// --- SYNCHRONISATION DER ÄNDERUNGEN MIT DEINER FEUERBASE-DATENBANK ---
 window.updateRow = async (idx, key, val) => {
     if (userRole !== 'admin') return;
     allData.spiele[idx][key] = val;
@@ -247,16 +243,13 @@ window.deleteEntry = async (idx) => {
     }
 };
 
-// --- WHATSAPP-VERSAND (NAME WIRD AUTOMATISCH MITÜBERMITTELT) ---
 window.sendWhatsApp = (d, t, h, a) => {
     const meinName = currentUserInfo ? currentUserInfo.name : "Ein Schiedsrichter";
     const msg = encodeURIComponent(`Hallo! Hier ist ${meinName}.\nIch möchte mich für folgendes Spiel pfeifen melden:\n\n📅 Datum: ${d}\n⏰ Zeit: ${t} Uhr\n🏢 Halle: ${h}\n⚽ Spiel/Turnier: ${a}\n\nIst das Spiel noch frei und kann ich eingeteilt werden?`);
     window.open(`https://wa.me/${WHATSAPP_NUMMER}?text=${msg}`, '_blank');
 };
 
-// --- SAISON-DASHBOARD (STATISTIK ZÄHLT AUCH VERGANGENE SPIELE) ---
 function updateDashboard() {
-    // Greift immer auf allData.spiele zurück – dort bleiben alte Spiele erhalten und zählen voll mit!
     const gesamtSpiele = allData.spiele.length;
     const offen = allData.spiele.filter(s => s.status === 'Offen').length;
     const besetzt = gesamtSpiele - offen;
