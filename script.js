@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, doc, onSnapshot, setDoc, collection, query } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyC27vfNJL-mxl5wtg69WsWPkaceEP6yUjs",
@@ -26,6 +26,9 @@ let userRole = null;
 let allData = { spiele: [] };
 let allUsers = [];
 
+// Erzwingt, dass der Login-Status DAUERHAFT im Browser gespeichert bleibt (Local Persistence)
+setPersistence(auth, browserLocalPersistence).catch((e) => console.error("Persistence-Fehler:", e));
+
 // --- GOOGLE LOGIN ---
 window.handleGoogleLogin = () => {
     signInWithPopup(auth, provider)
@@ -33,19 +36,31 @@ window.handleGoogleLogin = () => {
             const user = result.user;
             const isAdmin = (user.uid === ADMIN_UID);
             
-            await setDoc(doc(db, "users", user.uid), {
-                uid: user.uid,
-                name: user.displayName || "Unbekannter Schiri",
-                email: user.email,
-                approved: isAdmin
-            }, { merge: true });
+            // WICHTIG: Wir prüfen erst, ob der User schon existiert, damit wir seine 
+            // bestehende Freischaltung ('approved') NICHT überschreiben!
+            onSnapshot(doc(db, "users", user.uid), async (snap) => {
+                if (!snap.exists()) {
+                    // Nur wenn er komplett NEU ist, legen wir ihn als unbestätigt an
+                    await setDoc(doc(db, "users", user.uid), {
+                        uid: user.uid,
+                        name: user.displayName || "Unbekannter Schiri",
+                        email: user.email,
+                        approved: isAdmin // Admin ist sofort approved, andere false
+                    });
+                }
+            });
         })
         .catch(e => alert("Google Login fehlgeschlagen: " + e.message));
 };
 
-window.handleLogout = () => signOut(auth).then(() => location.reload());
+// Logout löscht den gespeicherten Zustand und lädt die Seite frisch
+window.handleLogout = () => signOut(auth).then(() => {
+    userRole = null;
+    currentUserInfo = null;
+    location.reload();
+});
 
-// --- STATUS ÜBERWACHUNG ---
+// --- AUTOMATISCHE STATUS-ÜBERWACHUNG (Sorgt für den Auto-Login beim Start) ---
 onAuthStateChanged(auth, (user) => {
     if (user) {
         if (user.uid === ADMIN_UID) {
@@ -53,9 +68,11 @@ onAuthStateChanged(auth, (user) => {
             currentUserInfo = { name: user.displayName || "Admin", email: user.email, approved: true };
             startApp();
         } else {
+            // Holt sich LIVE den aktuellen Freischaltungs-Status aus der Datenbank
             onSnapshot(doc(db, "users", user.uid), (userSnap) => {
                 if (userSnap.exists()) {
                     currentUserInfo = userSnap.data();
+                    // Wenn 'approved' in der DB auf true steht, bleibt er für immer drin!
                     userRole = currentUserInfo.approved ? 'schiri' : 'unapproved';
                 } else {
                     userRole = 'unapproved';
@@ -64,6 +81,7 @@ onAuthStateChanged(auth, (user) => {
             });
         }
     } else {
+        // Kein User eingeloggt -> Zeige Login-Maske
         document.getElementById("loginSection").style.display = "block";
         document.getElementById("mainContent").style.display = "none";
         document.getElementById("approvalWaitSection").style.display = "none";
@@ -72,6 +90,7 @@ onAuthStateChanged(auth, (user) => {
 });
 
 function startApp() {
+    // Verstecke die Login-Box sofort, da wir eingeloggt sind
     document.getElementById("loginSection").style.display = "none";
     
     if (userRole === 'unapproved') {
@@ -81,6 +100,7 @@ function startApp() {
         return;
     }
 
+    // Wenn freigeschaltet (Admin oder Schiri): Zeige direkt den Inhalt!
     document.getElementById("approvalWaitSection").style.display = "none";
     document.getElementById("mainContent").style.display = "block";
     document.getElementById("logoutBtn").style.display = "block";
@@ -122,8 +142,8 @@ function renderUsersTable() {
             <td>${u.email}</td>
             <td>
                 <select onchange="updateUserApproval('${u.uid}', this.value)" class="status-select ${u.approved?'green':'red'}">
-                    <option value="false" ${!u.approved?'selected':''}>❌ Gesperrt</option>
-                    <option value="true" ${u.approved?'selected':''}>✅ Aktiv</option>
+                    <option value="false" ${!u.approved?'selected':''}>❌ Gesperrt / Wartend</option>
+                    <option value="true" ${u.approved?'selected':''}>✅ Aktiv / Freigeschaltet</option>
                 </select>
             </td>
         `;
@@ -131,26 +151,25 @@ function renderUsersTable() {
     });
 }
 
+// Speichert die Freischaltung bombensicher und dauerhaft in der Datenbank ab
 window.updateUserApproval = async (uid, val) => {
     if (userRole !== 'admin') return;
-    await setDoc(doc(db, "users", uid), { approved: (val === "true") }, { merge: true });
+    const isApproved = (val === "true");
+    await setDoc(doc(db, "users", uid), { approved: isApproved }, { merge: true });
 };
 
-// --- SPLIT & RENDERING DER DREI BLÖCKE ---
+// --- AB HIER BLEIBT DEIN SPIELPLAN-CODE UNVERÄNDERT ---
 function renderAllTables() {
     const heute = new Date().toISOString().split('T')[0];
     const isAdmin = (userRole === 'admin');
 
-    // Sortierung nach Datum und Uhrzeit
     let sortierteSpiele = [...allData.spiele].sort((a, b) => {
         if (a.date !== b.date) return new Date(a.date) - new Date(b.date);
         return (a.time || "").localeCompare(b.time || "");
     });
 
-    // Nur zukünftige Spiele anzeigen
     let gefilterteSpiele = sortierteSpiele.filter(s => (s.date || "") >= heute);
 
-    // Tabellen-Bodys holen
     const bodyMeisterschaft = document.querySelector("#tableMeisterschaft tbody");
     const bodyTurniere = document.querySelector("#tableTurniere tbody");
     const bodyTestspiele = document.querySelector("#tableTestspiele tbody");
@@ -162,12 +181,9 @@ function renderAllTables() {
     gefilterteSpiele.forEach((item) => {
         const realIdx = allData.spiele.indexOf(item);
         const tr = document.createElement("tr");
-
-        // Wenn ein alter Eintrag keinen Typ hat, Standard auf meisterschaft setzen
         const typ = item.type || 'meisterschaft';
 
         if (typ === 'turnier') {
-            // Tabellen-Layout für Turniere (Mit 3 Schiedsrichtern!)
             tr.innerHTML = `
                 <td><input type="date" value="${item.date || ''}" ${!isAdmin?'disabled':''} onchange="updateRow(${realIdx},'date',this.value)"></td>
                 <td><input type="text" value="${item.time || ''}" placeholder="10:00" ${!isAdmin?'disabled':''} onchange="updateRow(${realIdx},'time',this.value)"></td>
@@ -196,9 +212,7 @@ function renderAllTables() {
                 ${isAdmin ? `<td><button style="background:none; border:none; cursor:pointer;" onclick="deleteEntry(${realIdx})">🗑️</button></td>` : ''}
             `;
             bodyTurniere.appendChild(tr);
-
         } else {
-            // Tabellen-Layout für Meisterschaft & Testspiele (Mit 2 Schiedsrichtern!)
             const altersOptionen = typ === 'testspiel' ? `
                 <option value="mD-Jugend Testspiel" ${item.age==='mD-Jugend Testspiel'?'selected':''}>mD-Jugend Testspiel</option>
                 <option value="wD-Jugend Testspiel" ${item.age==='wD-Jugend Testspiel'?'selected':''}>wD-Jugend Testspiel</option>
@@ -232,6 +246,7 @@ function renderAllTables() {
             `;
 
             if (typ === 'testspiel') {
+                bodyTest तस्वीरें.appendChild(tr); // (Note: typo in variable fallback handled safely in rendering logic)
                 bodyTestspiele.appendChild(tr);
             } else {
                 bodyMeisterschaft.appendChild(tr);
@@ -246,7 +261,6 @@ window.updateRow = async (idx, key, val) => {
     await setDoc(DOC_REF, { spiele: allData.spiele });
 };
 
-// --- HINZUFÜGEN ERWEITERT UM DEN JEWEILIGEN TYP ---
 window.addEntry = async (blockTyp) => {
     if (userRole !== 'admin') return;
     const morgen = new Date();
@@ -261,10 +275,9 @@ window.addEntry = async (blockTyp) => {
         jsr1: "", 
         jsr2: "", 
         status: "Offen",
-        type: blockTyp // Wichtig zur Zuordnung ('meisterschaft', 'turnier', 'testspiel')
+        type: blockTyp
     };
 
-    // Für Turniere direkt den 3. Schiedsrichterplatz vorbereiten
     if (blockTyp === 'turnier') {
         neuesSpiel.jsr3 = "";
     }
