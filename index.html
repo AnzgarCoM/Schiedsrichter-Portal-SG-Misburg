@@ -6,7 +6,7 @@
     <title>JSR Schiedsrichter Portal</title>
     <style>
         :root {
-            --primary-blue: #0033a0;      /* Offizielles SG Misburg Blau */
+            --primary-blue: #0033a0;
             --accent-blue: #1a4fb0;
             --whatsapp-green: #25D366;
             --danger-red: #e53e3e;
@@ -17,7 +17,7 @@
         }
 
         body {
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: 'Segoe UI', Roboto, sans-serif;
             background-color: var(--bg-gray);
             margin: 0;
             padding: 0;
@@ -34,11 +34,7 @@
             align-items: center;
         }
 
-        header h1 {
-            margin: 0;
-            font-size: 1.4rem;
-            letter-spacing: 0.5px;
-        }
+        header h1 { margin: 0; font-size: 1.4rem; }
 
         .card {
             background: var(--white);
@@ -50,7 +46,6 @@
             border: 1px solid #e2e8f0;
         }
 
-        /* Dashboard Layout */
         .dashboard-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -63,12 +58,9 @@
             border-radius: 10px;
             color: white;
             text-align: center;
-            font-size: 1rem;
             font-weight: 500;
-            box-shadow: inset 0 -3px 0 rgba(0,0,0,0.1);
         }
 
-        /* Tabellen-Styling */
         .table-container {
             overflow-x: auto;
             margin-top: 15px;
@@ -76,256 +68,67 @@
             border: 1px solid #edf2f7;
         }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            min-width: 950px;
-        }
+        table { width: 100%; border-collapse: collapse; min-width: 950px; }
+        th { background: #f8fafc; padding: 14px 12px; text-align: left; font-size: 0.75rem; color: #64748b; border-bottom: 2px solid #edf2f7; }
+        td { padding: 10px 12px; border-bottom: 1px solid #edf2f7; vertical-align: middle; }
+        tr:hover { background-color: #f9fafb; }
 
-        th {
-            background: #f8fafc;
-            padding: 14px 12px;
-            text-align: left;
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            color: #64748b;
-            border-bottom: 2px solid #edf2f7;
-            position: sticky;
-            top: 0;
-            z-index: 5;
-        }
+        .status-select { font-weight: bold; padding: 6px 10px; border-radius: 6px; border: 1px solid #cbd5e0; }
+        .status-select.red { color: var(--danger-red); background-color: #fff5f5; }
+        .status-select.green { color: var(--success-green); background-color: #f0fff4; }
 
-        td {
-            padding: 10px 12px;
-            border-bottom: 1px solid #edf2f7;
-            vertical-align: middle;
-        }
+        input, select { border: 1px solid #cbd5e0; padding: 8px; border-radius: 6px; width: 100%; box-sizing: border-box; }
+        input:disabled, select:disabled { background: transparent; border: none; color: #2d3748; font-weight: 500; }
 
-        tr:hover {
-            background-color: #f9fafb;
-        }
-
-        /* Turnier-Erkennung */
-        .is-tournament {
-            background-color: #fffaf0 !important;
-            border-left: 6px solid #ed8936;
-        }
-        .is-tournament input {
-            background-color: #fffaf0;
-        }
-
-        /* Status Felder */
-        .status-select {
-            font-weight: bold;
-            padding: 6px 10px;
-            border-radius: 6px;
-            border: 1px solid #cbd5e0;
-            cursor: pointer;
-        }
-        .status-select.red { color: var(--danger-red); border-color: var(--danger-red); background-color: #fff5f5; }
-        .status-select.green { color: var(--success-green); border-color: var(--success-green); background-color: #f0fff4; }
-
-        .badge-besetzt {
-            background: #edf2f7;
-            color: #4a5568;
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: bold;
-            display: inline-block;
-        }
-
-        /* Eingabefelder */
-        input, select {
-            border: 1px solid #cbd5e0;
-            padding: 8px;
-            border-radius: 6px;
-            width: 100%;
-            font-size: 0.9rem;
-            box-sizing: border-box;
-            transition: all 0.2s;
-        }
-
-        input:focus, select:focus {
-            outline: none;
-            border-color: var(--primary-blue);
-            box-shadow: 0 0 0 3px rgba(0, 51, 160, 0.15);
-        }
-
-        input:disabled, select:disabled {
-            background: transparent;
-            border: none;
-            color: #2d3748;
-            font-weight: 500;
-            cursor: default;
-            appearance: none;
-            padding-left: 0;
-        }
-
-        /* Buttons */
-        .add-btn {
-            background-color: var(--primary-blue);
+        .google-btn {
+            background-color: #4285F4;
             color: white;
             border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .add-btn:hover {
-            background-color: var(--accent-blue);
-        }
-
-        .whatsapp-btn {
-            background-color: var(--whatsapp-green);
-            color: white;
-            border: none;
-            padding: 9px 15px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 0.85rem;
-            transition: background 0.2s;
-            box-shadow: 0 2px 4px rgba(37, 211, 102, 0.2);
-        }
-
-        .whatsapp-btn:hover {
-            background-color: #20ba5a;
-        }
-
-        .logout-btn {
-            background: rgba(255, 255, 255, 0.15);
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            color: white;
-            padding: 6px 14px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 0.8rem;
-            font-weight: 500;
-            transition: background 0.2s;
-        }
-
-        header .logout-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
-        }
-
-        #usersTable th {
-            background: #f1f5f9;
-        }
-        
-        .form-group {
-            margin-bottom: 15px;
-        }
-        .btn {
-            width: 100%;
-            padding: 12px;
+            padding: 12px 24px;
             font-size: 1rem;
-            border: none;
+            font-weight: bold;
             border-radius: 8px;
             cursor: pointer;
-            font-weight: bold;
+            display: block;
+            margin: 20px auto;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
-        .btn-primary {
-            background-color: var(--primary-blue);
-            color: white;
-        }
-        .btn-success {
-            background-color: var(--success-green);
-            color: white;
-            width: auto;
-        }
-        .toggle-text {
-            text-align: center;
-            margin-top: 15px;
-            font-size: 0.9rem;
-            color: #4a5568;
-        }
-        .toggle-text span {
-            color: var(--primary-blue);
-            cursor: pointer;
-            font-weight: 600;
-        }
-        .toggle-text span:hover {
-            text-decoration: underline;
-        }
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-        .section-header h2 {
-            margin: 0;
-        }
-        .sub-text {
-            color: #64748b;
-            font-size: 0.9rem;
-            margin-top: -10px;
-            margin-bottom: 20px;
-        }
+        .google-btn:hover { background-color: #357ae8; }
+
+        .btn-success { background-color: var(--success-green); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .whatsapp-btn { background-color: var(--whatsapp-green); color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .logout-btn { background: rgba(255,255,255,0.2); border: 1px solid white; color: white; padding: 6px 12px; border-radius: 20px; cursor: pointer; }
+        .section-header { display: flex; justify-content: space-between; align-items: center; }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>JSR Portal</h1>
+        <h1 id="userStatus">JSR Portal</h1>
         <button id="logoutBtn" class="logout-btn" onclick="window.handleLogout()" style="display: none;">Abmelden 🚪</button>
     </header>
 
     <main>
-
-        <section id="loginSection" class="card">
-            <h2 id="authTitle">Anmelden</h2>
-            
-            <div class="form-group">
-                <input type="text" id="nameInput" placeholder="Dein Vor- und Nachname" style="display: none;">
-            </div>
-            
-            <div class="form-group">
-                <input type="email" id="emailInput" placeholder="E-Mail-Adresse">
-            </div>
-            
-            <div class="form-group">
-                <input type="password" id="pwInput" placeholder="Passwort (mind. 6 Zeichen)">
-            </div>
-            
-            <button id="mainAuthBtn" class="btn btn-primary" onclick="window.handleLogin()">Einloggen</button>
-            
-            <p class="toggle-text">
-                <span id="toggleAuthBtn" onclick="window.toggleAuthMode()">Noch kein Konto? Hier registrieren</span>
-            </p>
+        <section id="loginSection" class="card" style="text-align: center;">
+            <h2>Willkommen beim JSR-Portal</h2>
+            <p>Bitte melde dich mit deinem Google-Konto an, um fortzufahren.</p>
+            <button class="google-btn" onclick="window.handleGoogleLogin()">Anmelden mit Google 🚀</button>
         </section>
-
 
         <section id="approvalWaitSection" class="card" style="display: none; text-align: center;">
             <h2>⏳ Konto angelegt!</h2>
-            <p>Deine Registrierung war erfolgreich.</p>
-            <p>Aus Sicherheitsgründen muss dein Account erst vom <b>Admin freigeschaltet</b> werden, bevor du den Spielplan sehen kannst.</p>
-            <p>Bitte hab ein wenig Geduld oder gib dem Admin kurz Bescheid.</p>
+            <p>Deine Anmeldung war erfolgreich. Bitte warte, bis der Admin deinen Account freigeschaltet hat.</p>
         </section>
 
-
         <div id="mainContent" style="display: none;">
-            
-            <section id="dashboard" class="dashboard-grid">
-                </section>
+            <section id="dashboard" class="dashboard-grid"></section>
 
             <section class="card admin-only" style="display: none;">
                 <h2>👥 Schiedsrichter-Verwaltung (Admin)</h2>
-                <p class="sub-text">Hier siehst du alle registrierten Accounts und kannst sie für das Portal freischalten.</p>
                 <div class="table-container">
                     <table id="usersTable">
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>E-Mail</th>
-                                <th>Status / Freigabe</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            </tbody>
+                        <thead><tr><th>Name</th><th>E-Mail</th><th>Status</th></tr></thead>
+                        <tbody></tbody>
                     </table>
                 </div>
             </section>
@@ -335,33 +138,16 @@
                     <h2>📅 Aktueller Spielplan</h2>
                     <button class="btn btn-success admin-only" style="display: none;" onclick="window.addEntry()">+ Neues Spiel hinzufügen</button>
                 </div>
-                
                 <div class="table-container">
                     <table id="spieleTable">
-                        <thead>
-                            <tr>
-                                <th>Datum</th>
-                                <th>Zeit</th>
-                                <th>Halle</th>
-                                <th>Altersklasse / Spiel</th>
-                                <th>JSR 1</th>
-                                <th>JSR 2</th>
-                                <th>Status</th>
-                                <th>Aktion</th>
-                                <th class="admin-only" style="display: none;">Löschen</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            </tbody>
+                        <thead><tr><th>Datum</th><th>Zeit</th><th>Halle</th><th>Spiel</th><th>JSR 1</th><th>JSR 2</th><th>Status</th><th>Aktion</th><th class="admin-only" style="display: none;">Löschen</th></tr></thead>
+                        <tbody></tbody>
                     </table>
                 </div>
             </section>
-
         </div>
-
     </main>
 
     <script type="module" src="script.js"></script>
-
 </body>
 </html>
