@@ -33,7 +33,6 @@ window.handleGoogleLogin = () => {
             const user = result.user;
             const isAdmin = (user.uid === ADMIN_UID);
             
-            // Profil in der Datenbank anlegen/aktualisieren
             await setDoc(doc(db, "users", user.uid), {
                 uid: user.uid,
                 name: user.displayName || "Unbekannter Schiri",
@@ -102,7 +101,7 @@ function startApp() {
     onSnapshot(DOC_REF, (snap) => {
         if (snap.exists()) {
             allData.spiele = Array.isArray(snap.data().spiele) ? snap.data().spiele : [];
-            renderSpieleTable();
+            renderAllTables();
             updateDashboard();
         } else if (userRole === 'admin') {
             setDoc(DOC_REF, { spiele: [] });
@@ -137,38 +136,107 @@ window.updateUserApproval = async (uid, val) => {
     await setDoc(doc(db, "users", uid), { approved: (val === "true") }, { merge: true });
 };
 
-function renderSpieleTable() {
-    const tbody = document.querySelector("#spieleTable tbody");
-    if (!tbody) return;
-    tbody.innerHTML = "";
-    const isAdmin = (userRole === 'admin');
+// --- SPLIT & RENDERING DER DREI BLÖCKE ---
+function renderAllTables() {
     const heute = new Date().toISOString().split('T')[0];
+    const isAdmin = (userRole === 'admin');
 
-    let anzeigeListe = [...allData.spiele].sort((a, b) => new Date(a.date) - new Date(b.date));
-    anzeigeListe = anzeigeListe.filter(s => s.date >= heute);
+    // Sortierung nach Datum und Uhrzeit
+    let sortierteSpiele = [...allData.spiele].sort((a, b) => {
+        if (a.date !== b.date) return new Date(a.date) - new Date(b.date);
+        return (a.time || "").localeCompare(b.time || "");
+    });
 
-    anzeigeListe.forEach((item) => {
+    // Nur zukünftige Spiele anzeigen
+    let gefilterteSpiele = sortierteSpiele.filter(s => (s.date || "") >= heute);
+
+    // Tabellen-Bodys holen
+    const bodyMeisterschaft = document.querySelector("#tableMeisterschaft tbody");
+    const bodyTurniere = document.querySelector("#tableTurniere tbody");
+    const bodyTestspiele = document.querySelector("#tableTestspiele tbody");
+
+    bodyMeisterschaft.innerHTML = "";
+    bodyTurniere.innerHTML = "";
+    bodyTestspiele.innerHTML = "";
+
+    gefilterteSpiele.forEach((item) => {
         const realIdx = allData.spiele.indexOf(item);
         const tr = document.createElement("tr");
-        tr.innerHTML = `
-            <td><input type="date" value="${item.date || ''}" ${!isAdmin?'disabled':''} onchange="updateRow(${realIdx},'date',this.value)"></td>
-            <td><input type="text" value="${item.time || ''}" ${!isAdmin?'disabled':''} onchange="updateRow(${realIdx},'time',this.value)"></td>
-            <td><input type="text" value="${item.hall || ''}" ${!isAdmin?'disabled':''} onchange="updateRow(${realIdx},'hall',this.value)"></td>
-            <td><input type="text" value="${item.age || ''}" ${!isAdmin?'disabled':''} onchange="updateRow(${realIdx},'age',this.value)"></td>
-            <td><input type="text" value="${item.jsr1 || ''}" ${!isAdmin?'disabled':''} onchange="updateRow(${realIdx},'jsr1',this.value)"></td>
-            <td><input type="text" value="${item.jsr2 || ''}" ${!isAdmin?'disabled':''} onchange="updateRow(${realIdx},'jsr2',this.value)"></td>
-            <td>
-                <select ${!isAdmin?'disabled':''} onchange="updateRow(${realIdx},'status',this.value)" class="status-select ${item.status==='Offen'?'red':'green'}">
-                    <option value="Offen" ${item.status==='Offen'?'selected':''}>Offen</option>
-                    <option value="Besetzt" ${item.status==='Besetzt'?'selected':''}>Besetzt</option>
-                </select>
-            </td>
-            <td>
-                ${item.status === 'Offen' ? `<button class="whatsapp-btn" onclick="sendWhatsApp('${item.date}','${item.time}','${item.hall}','${item.age}')">Melden 🟢</button>` : 'Eingeteilt'}
-            </td>
-            ${isAdmin ? `<td><button style="background:none; border:none; cursor:pointer;" onclick="deleteEntry(${realIdx})">🗑️</button></td>` : ''}
-        `;
-        tbody.appendChild(tr);
+
+        // Wenn ein alter Eintrag keinen Typ hat, Standard auf meisterschaft setzen
+        const typ = item.type || 'meisterschaft';
+
+        if (typ === 'turnier') {
+            // Tabellen-Layout für Turniere (Mit 3 Schiedsrichtern!)
+            tr.innerHTML = `
+                <td><input type="date" value="${item.date || ''}" ${!isAdmin?'disabled':''} onchange="updateRow(${realIdx},'date',this.value)"></td>
+                <td><input type="text" value="${item.time || ''}" placeholder="10:00" ${!isAdmin?'disabled':''} onchange="updateRow(${realIdx},'time',this.value)"></td>
+                <td><input type="text" value="${item.hall || ''}" placeholder="Halle" ${!isAdmin?'disabled':''} onchange="updateRow(${realIdx},'hall',this.value)"></td>
+                <td>
+                    <select ${!isAdmin?'disabled':''} onchange="updateRow(${realIdx},'age',this.value)">
+                        <option value="" ${!item.age?'selected':''}>- Bitte wählen -</option>
+                        <option value="mE-Jugend Turnier" ${item.age==='mE-Jugend Turnier'?'selected':''}>mE-Jugend Turnier</option>
+                        <option value="wE-Jugend Turnier" ${item.age==='wE-Jugend Turnier'?'selected':''}>wE-Jugend Turnier</option>
+                        <option value="mF-Jugend Turnier" ${item.age==='mF-Jugend Turnier'?'selected':''}>mF-Jugend Turnier</option>
+                        <option value="wF-Jugend Turnier" ${item.age==='wF-Jugend Turnier'?'selected':''}>wF-Jugend Turnier</option>
+                    </select>
+                </td>
+                <td><input type="text" value="${item.jsr1 || ''}" placeholder="JSR 1" ${!isAdmin?'disabled':''} onchange="updateRow(${realIdx},'jsr1',this.value)"></td>
+                <td><input type="text" value="${item.jsr2 || ''}" placeholder="JSR 2" ${!isAdmin?'disabled':''} onchange="updateRow(${realIdx},'jsr2',this.value)"></td>
+                <td><input type="text" value="${item.jsr3 || ''}" placeholder="JSR 3" ${!isAdmin?'disabled':''} onchange="updateRow(${realIdx},'jsr3',this.value)"></td>
+                <td>
+                    <select ${!isAdmin?'disabled':''} onchange="updateRow(${realIdx},'status',this.value)" class="status-select ${item.status==='Offen'?'red':'green'}">
+                        <option value="Offen" ${item.status==='Offen'?'selected':''}>Offen</option>
+                        <option value="Besetzt" ${item.status==='Besetzt'?'selected':''}>Besetzt</option>
+                    </select>
+                </td>
+                <td>
+                    ${item.status === 'Offen' ? `<button class="whatsapp-btn" onclick="sendWhatsApp('${item.date}','${item.time}','${item.hall}','${item.age}')">Melden 🟢</button>` : 'Besetzt'}
+                </td>
+                ${isAdmin ? `<td><button style="background:none; border:none; cursor:pointer;" onclick="deleteEntry(${realIdx})">🗑️</button></td>` : ''}
+            `;
+            bodyTurniere.appendChild(tr);
+
+        } else {
+            // Tabellen-Layout für Meisterschaft & Testspiele (Mit 2 Schiedsrichtern!)
+            const altersOptionen = typ === 'testspiel' ? `
+                <option value="mD-Jugend Testspiel" ${item.age==='mD-Jugend Testspiel'?'selected':''}>mD-Jugend Testspiel</option>
+                <option value="wD-Jugend Testspiel" ${item.age==='wD-Jugend Testspiel'?'selected':''}>wD-Jugend Testspiel</option>
+            ` : `
+                <option value="mD-Jugend" ${item.age==='mD-Jugend'?'selected':''}>mD-Jugend</option>
+                <option value="wD-Jugend" ${item.age==='wD-Jugend'?'selected':''}>wD-Jugend</option>
+            `;
+
+            tr.innerHTML = `
+                <td><input type="date" value="${item.date || ''}" ${!isAdmin?'disabled':''} onchange="updateRow(${realIdx},'date',this.value)"></td>
+                <td><input type="text" value="${item.time || ''}" placeholder="14:00" ${!isAdmin?'disabled':''} onchange="updateRow(${realIdx},'time',this.value)"></td>
+                <td><input type="text" value="${item.hall || ''}" placeholder="Halle" ${!isAdmin?'disabled':''} onchange="updateRow(${realIdx},'hall',this.value)"></td>
+                <td>
+                    <select ${!isAdmin?'disabled':''} onchange="updateRow(${realIdx},'age',this.value)">
+                        <option value="" ${!item.age?'selected':''}>- Bitte wählen -</option>
+                        ${altersOptionen}
+                    </select>
+                </td>
+                <td><input type="text" value="${item.jsr1 || ''}" placeholder="JSR 1" ${!isAdmin?'disabled':''} onchange="updateRow(${realIdx},'jsr1',this.value)"></td>
+                <td><input type="text" value="${item.jsr2 || ''}" placeholder="JSR 2" ${!isAdmin?'disabled':''} onchange="updateRow(${realIdx},'jsr2',this.value)"></td>
+                <td>
+                    <select ${!isAdmin?'disabled':''} onchange="updateRow(${realIdx},'status',this.value)" class="status-select ${item.status==='Offen'?'red':'green'}">
+                        <option value="Offen" ${item.status==='Offen'?'selected':''}>Offen</option>
+                        <option value="Besetzt" ${item.status==='Besetzt'?'selected':''}>Besetzt</option>
+                    </select>
+                </td>
+                <td>
+                    ${item.status === 'Offen' ? `<button class="whatsapp-btn" onclick="sendWhatsApp('${item.date}','${item.time}','${item.hall}','${item.age}')">Melden 🟢</button>` : 'Besetzt'}
+                </td>
+                ${isAdmin ? `<td><button style="background:none; border:none; cursor:pointer;" onclick="deleteEntry(${realIdx})">🗑️</button></td>` : ''}
+            `;
+
+            if (typ === 'testspiel') {
+                bodyTestspiele.appendChild(tr);
+            } else {
+                bodyMeisterschaft.appendChild(tr);
+            }
+        }
     });
 }
 
@@ -178,23 +246,42 @@ window.updateRow = async (idx, key, val) => {
     await setDoc(DOC_REF, { spiele: allData.spiele });
 };
 
-window.addEntry = async () => {
+// --- HINZUFÜGEN ERWEITERT UM DEN JEWEILIGEN TYP ---
+window.addEntry = async (blockTyp) => {
     if (userRole !== 'admin') return;
     const morgen = new Date();
     morgen.setDate(morgen.getDate() + 1);
-    allData.spiele.push({ date: morgen.toISOString().split('T')[0], time: "10:00", hall: "", age: "", jsr1: "", jsr2: "", status: "Offen" });
+    const datumString = morgen.toISOString().split('T')[0];
+    
+    let neuesSpiel = { 
+        date: datumString, 
+        time: "10:00", 
+        hall: "", 
+        age: "", 
+        jsr1: "", 
+        jsr2: "", 
+        status: "Offen",
+        type: blockTyp // Wichtig zur Zuordnung ('meisterschaft', 'turnier', 'testspiel')
+    };
+
+    // Für Turniere direkt den 3. Schiedsrichterplatz vorbereiten
+    if (blockTyp === 'turnier') {
+        neuesSpiel.jsr3 = "";
+    }
+
+    allData.spiele.push(neuesSpiel);
     await setDoc(DOC_REF, { spiele: allData.spiele });
 };
 
 window.deleteEntry = async (idx) => {
-    if (confirm("Spiel löschen?")) {
+    if (confirm("Dieses Event wirklich unwiderruflich löschen?")) {
         allData.spiele.splice(idx, 1);
         await setDoc(DOC_REF, { spiele: allData.spiele });
     }
 };
 
 window.sendWhatsApp = (d, t, h, a) => {
-    const msg = encodeURIComponent(`Hallo! Hier ist ${currentUserInfo.name}.\nIch möchte mich für das Spiel am ${d} um ${t} Uhr in der Halle ${h} (${a}) melden.`);
+    const msg = encodeURIComponent(`Hallo! Hier ist ${currentUserInfo.name}.\nIch möchte mich für folgende Ansetzung pfeifen melden:\n\n📅 Datum: ${d}\n⏰ Zeit: ${t} Uhr\n🏢 Halle: ${h}\n⚽ Spielbezeichnung: ${a || 'Nicht definiert'}\n\nKann ich eingeteilt werden?`);
     window.open(`https://wa.me/${WHATSAPP_NUMMER}?text=${msg}`, '_blank');
 };
 
@@ -204,8 +291,8 @@ function updateDashboard() {
     const gesamt = allData.spiele.length;
     const offen = allData.spiele.filter(s => s.status === 'Offen').length;
     dash.innerHTML = `
-        <div class="stat-card" style="background:var(--primary-blue)"><b>${gesamt}</b> Spiele</div>
-        <div class="stat-card" style="background:var(--danger-red)"><b>${offen}</b> Offen</div>
-        <div class="stat-card" style="background:var(--success-green)"><b>${gesamt - offen}</b> Besetzt</div>
+        <div class="stat-card" style="background:var(--primary-blue)"><b>${gesamt}</b> Events Gesamt</div>
+        <div class="stat-card" style="background:var(--danger-red)"><b>${offen}</b> Offene Ansetzungen</div>
+        <div class="stat-card" style="background:var(--success-green)"><b>${gesamt - offen}</b> Besetzte Spiele</div>
     `;
 }
