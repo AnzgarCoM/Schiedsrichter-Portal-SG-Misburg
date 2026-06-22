@@ -26,7 +26,6 @@ let userRole = null;
 let allData = { spiele: [] };
 let allUsers = [];
 
-// Erzwingt, dass der Login-Status DAUERHAFT im Browser gespeichert bleibt (Local Persistence)
 setPersistence(auth, browserLocalPersistence).catch((e) => console.error("Persistence-Fehler:", e));
 
 // --- GOOGLE LOGIN ---
@@ -36,31 +35,23 @@ window.handleGoogleLogin = () => {
             const user = result.user;
             const isAdmin = (user.uid === ADMIN_UID);
             
-            // WICHTIG: Wir prüfen erst, ob der User schon existiert, damit wir seine 
-            // bestehende Freischaltung ('approved') NICHT überschreiben!
-            onSnapshot(doc(db, "users", user.uid), async (snap) => {
-                if (!snap.exists()) {
-                    // Nur wenn er komplett NEU ist, legen wir ihn als unbestätigt an
-                    await setDoc(doc(db, "users", user.uid), {
-                        uid: user.uid,
-                        name: user.displayName || "Unbekannter Schiri",
-                        email: user.email,
-                        approved: isAdmin // Admin ist sofort approved, andere false
-                    });
-                }
-            });
+            await setDoc(doc(db, "users", user.uid), {
+                uid: user.uid,
+                name: user.displayName || "Unbekannter Schiri",
+                email: user.email,
+                approved: isAdmin
+            }, { merge: true });
         })
         .catch(e => alert("Google Login fehlgeschlagen: " + e.message));
 };
 
-// Logout löscht den gespeicherten Zustand und lädt die Seite frisch
 window.handleLogout = () => signOut(auth).then(() => {
     userRole = null;
     currentUserInfo = null;
     location.reload();
 });
 
-// --- AUTOMATISCHE STATUS-ÜBERWACHUNG (Sorgt für den Auto-Login beim Start) ---
+// --- AUTOMATISCHE STATUS-ÜBERWACHUNG ---
 onAuthStateChanged(auth, (user) => {
     if (user) {
         if (user.uid === ADMIN_UID) {
@@ -68,11 +59,9 @@ onAuthStateChanged(auth, (user) => {
             currentUserInfo = { name: user.displayName || "Admin", email: user.email, approved: true };
             startApp();
         } else {
-            // Holt sich LIVE den aktuellen Freischaltungs-Status aus der Datenbank
             onSnapshot(doc(db, "users", user.uid), (userSnap) => {
                 if (userSnap.exists()) {
                     currentUserInfo = userSnap.data();
-                    // Wenn 'approved' in der DB auf true steht, bleibt er für immer drin!
                     userRole = currentUserInfo.approved ? 'schiri' : 'unapproved';
                 } else {
                     userRole = 'unapproved';
@@ -81,7 +70,6 @@ onAuthStateChanged(auth, (user) => {
             });
         }
     } else {
-        // Kein User eingeloggt -> Zeige Login-Maske
         document.getElementById("loginSection").style.display = "block";
         document.getElementById("mainContent").style.display = "none";
         document.getElementById("approvalWaitSection").style.display = "none";
@@ -90,7 +78,6 @@ onAuthStateChanged(auth, (user) => {
 });
 
 function startApp() {
-    // Verstecke die Login-Box sofort, da wir eingeloggt sind
     document.getElementById("loginSection").style.display = "none";
     
     if (userRole === 'unapproved') {
@@ -100,7 +87,6 @@ function startApp() {
         return;
     }
 
-    // Wenn freigeschaltet (Admin oder Schiri): Zeige direkt den Inhalt!
     document.getElementById("approvalWaitSection").style.display = "none";
     document.getElementById("mainContent").style.display = "block";
     document.getElementById("logoutBtn").style.display = "block";
@@ -151,14 +137,13 @@ function renderUsersTable() {
     });
 }
 
-// Speichert die Freischaltung bombensicher und dauerhaft in der Datenbank ab
 window.updateUserApproval = async (uid, val) => {
     if (userRole !== 'admin') return;
     const isApproved = (val === "true");
     await setDoc(doc(db, "users", uid), { approved: isApproved }, { merge: true });
 };
 
-// --- AB HIER BLEIBT DEIN SPIELPLAN-CODE UNVERÄNDERT ---
+// --- RENDERING DER DREI BLÖCKE ---
 function renderAllTables() {
     const heute = new Date().toISOString().split('T')[0];
     const isAdmin = (userRole === 'admin');
@@ -174,9 +159,9 @@ function renderAllTables() {
     const bodyTurniere = document.querySelector("#tableTurniere tbody");
     const bodyTestspiele = document.querySelector("#tableTestspiele tbody");
 
-    bodyMeisterschaft.innerHTML = "";
-    bodyTurniere.innerHTML = "";
-    bodyTestspiele.innerHTML = "";
+    if (bodyMeisterschaft) bodyMeisterschaft.innerHTML = "";
+    if (bodyTurniere) bodyTurniere.innerHTML = "";
+    if (bodyTestspiele) bodyTestspiele.innerHTML = "";
 
     gefilterteSpiele.forEach((item) => {
         const realIdx = allData.spiele.indexOf(item);
@@ -211,7 +196,7 @@ function renderAllTables() {
                 </td>
                 ${isAdmin ? `<td><button style="background:none; border:none; cursor:pointer;" onclick="deleteEntry(${realIdx})">🗑️</button></td>` : ''}
             `;
-            bodyTurniere.appendChild(tr);
+            if (bodyTurniere) bodyTurniere.appendChild(tr);
         } else {
             const altersOptionen = typ === 'testspiel' ? `
                 <option value="mD-Jugend Testspiel" ${item.age==='mD-Jugend Testspiel'?'selected':''}>mD-Jugend Testspiel</option>
@@ -246,10 +231,9 @@ function renderAllTables() {
             `;
 
             if (typ === 'testspiel') {
-                bodyTest तस्वीरें.appendChild(tr); // (Note: typo in variable fallback handled safely in rendering logic)
-                bodyTestspiele.appendChild(tr);
+                if (bodyTestspiele) bodyTestspiele.appendChild(tr);
             } else {
-                bodyMeisterschaft.appendChild(tr);
+                if (bodyMeisterschaft) bodyMeisterschaft.appendChild(tr);
             }
         }
     });
