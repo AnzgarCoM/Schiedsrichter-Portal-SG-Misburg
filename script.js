@@ -28,8 +28,8 @@ let allUsers = [];
 
 setPersistence(auth, browserLocalPersistence).catch((e) => console.error("Persistence-Fehler:", e));
 
-// --- GOOGLE LOGIN ---
-window.handleGoogleLogin = () => {
+// --- GOOGLE LOGIN FUNKTION ---
+const loginWithGoogle = () => {
     signInWithPopup(auth, provider)
         .then(async (result) => {
             const user = result.user;
@@ -293,3 +293,11 @@ function updateDashboard() {
         <div class="stat-card" style="background:var(--success-green)"><b>${gesamt - offen}</b> Besetzte Spiele</div>
     `;
 }
+
+// --- EVENT LISTENER ANHEFTEN (Repariert die Blockade des Buttons!) ---
+document.addEventListener("DOMContentLoaded", () => {
+    const btn = document.getElementById("googleLoginBtn");
+    if (btn) {
+        btn.addEventListener("click", loginWithGoogle);
+    }
+});
