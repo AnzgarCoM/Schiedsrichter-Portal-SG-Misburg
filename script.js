@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, doc, onSnapshot, setDoc, collection, query } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getAuth, signInWithPopup, signInWithRedirect, GoogleAuthProvider, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyC27vfNJL-mxl5wtg69WsWPkaceEP6yUjs",
@@ -28,22 +28,29 @@ let allUsers = [];
 
 setPersistence(auth, browserLocalPersistence).catch((e) => console.error("Persistence-Fehler:", e));
 
-// --- GOOGLE LOGIN FUNKTION ---
+// --- GOOGLE LOGIN FUNKTION (Mit Fallback auf Redirect) ---
 const loginWithGoogle = () => {
+    console.log("Google Login gestartet...");
     signInWithPopup(auth, provider)
         .then(async (result) => {
-            const user = result.user;
-            const isAdmin = (user.uid === ADMIN_UID);
-            
-            await setDoc(doc(db, "users", user.uid), {
-                uid: user.uid,
-                name: user.displayName || "Unbekannter Schiri",
-                email: user.email,
-                approved: isAdmin
-            }, { merge: true });
+            await handleUserDatabaseEntry(result.user);
         })
-        .catch(e => alert("Google Login fehlgeschlagen: " + e.message));
+        .catch((e) => {
+            console.warn("Pop-up blockiert oder geschlossen, versuche Redirect...", e.message);
+            // Wenn Pop-up fehlschlägt (z.B. wegen Blockern), nutze Redirect
+            signInWithRedirect(auth, provider).catch(err => alert("Login komplett fehlgeschlagen: " + err.message));
+        });
 };
+
+async function handleUserDatabaseEntry(user) {
+    const isAdmin = (user.uid === ADMIN_UID);
+    await setDoc(doc(db, "users", user.uid), {
+        uid: user.uid,
+        name: user.displayName || "Unbekannter Schiri",
+        email: user.email,
+        approved: isAdmin
+    }, { merge: true });
+}
 
 window.handleLogout = () => signOut(auth).then(() => {
     userRole = null;
@@ -64,36 +71,51 @@ onAuthStateChanged(auth, (user) => {
                     currentUserInfo = userSnap.data();
                     userRole = currentUserInfo.approved ? 'schiri' : 'unapproved';
                 } else {
+                    // Falls der User durch Redirect eingeloggt wurde, aber noch nicht in der DB steht
+                    handleUserDatabaseEntry(user);
                     userRole = 'unapproved';
                 }
                 startApp();
             });
         }
     } else {
-        document.getElementById("loginSection").style.display = "block";
-        document.getElementById("mainContent").style.display = "none";
-        document.getElementById("approvalWaitSection").style.display = "none";
-        document.getElementById("logoutBtn").style.display = "none";
+        showSection("loginSection");
+        hideSection("mainContent");
+        hideSection("approvalWaitSection");
+        hideSection("logoutBtn");
     }
 });
 
+function showSection(id) {
+    const el = document.getElementById(id);
+    if (el) el.style.display = "block";
+}
+
+function hideSection(id) {
+    const el = document.getElementById(id);
+    if (el) el.style.display = "none";
+}
+
 function startApp() {
-    document.getElementById("loginSection").style.display = "none";
+    hideSection("loginSection");
     
     if (userRole === 'unapproved') {
-        document.getElementById("approvalWaitSection").style.display = "block";
-        document.getElementById("mainContent").style.display = "none";
-        document.getElementById("logoutBtn").style.display = "block";
+        showSection("approvalWaitSection");
+        hideSection("mainContent");
+        showSection("logoutBtn");
         return;
     }
 
-    document.getElementById("approvalWaitSection").style.display = "none";
-    document.getElementById("mainContent").style.display = "block";
-    document.getElementById("logoutBtn").style.display = "block";
+    hideSection("approvalWaitSection");
+    showSection("mainContent");
+    showSection("logoutBtn");
     
-    document.getElementById("userStatus").innerText = userRole === 'admin' 
-        ? `👑 Admin-Modus (${currentUserInfo.name})` 
-        : `🏃 JSR-Bereich (Eingeloggt als: ${currentUserInfo.name})`;
+    const statusEl = document.getElementById("userStatus");
+    if (statusEl) {
+        statusEl.innerText = userRole === 'admin' 
+            ? `👑 Admin-Modus (${currentUserInfo.name})` 
+            : `🏃 JSR-Bereich (Eingeloggt als: ${currentUserInfo.name})`;
+    }
     
     if (userRole === 'admin') {
         document.querySelectorAll('.admin-only').forEach(e => e.style.display = 'block');
@@ -143,7 +165,7 @@ window.updateUserApproval = async (uid, val) => {
     await setDoc(doc(db, "users", uid), { approved: isApproved }, { merge: true });
 };
 
-// --- RENDERING DER DREI BLÖCKE ---
+// --- RENDERING DER TABELLEN ---
 function renderAllTables() {
     const heute = new Date().toISOString().split('T')[0];
     const isAdmin = (userRole === 'admin');
@@ -294,10 +316,13 @@ function updateDashboard() {
     `;
 }
 
-// --- EVENT LISTENER ANHEFTEN (Repariert die Blockade des Buttons!) ---
+// --- EVENT LISTENER SAUBER ANHEFTEN ---
 document.addEventListener("DOMContentLoaded", () => {
     const btn = document.getElementById("googleLoginBtn");
     if (btn) {
         btn.addEventListener("click", loginWithGoogle);
+        console.log("Klick-Event erfolgreich an #googleLoginBtn gebunden.");
+    } else {
+        console.error("Fehler: Button mit der ID 'googleLoginBtn' wurde im HTML nicht gefunden!");
     }
 });
