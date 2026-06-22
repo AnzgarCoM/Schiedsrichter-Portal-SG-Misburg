@@ -2,7 +2,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getFirestore, doc, onSnapshot, setDoc, collection, query } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-// --- DEINE ECHTEN, KORREKTEN FIREBASE ZUGANGSDATEN ---
+// --- DEINE FIREBASE CONFIGURATION ---
 const firebaseConfig = {
     apiKey: "AIzaSyC27vfNJL-mxl5wtg69WsWPkaceEP6yUjs",
     authDomain: "jsr-1-d3000.firebaseapp.com",
@@ -76,7 +76,7 @@ window.handleRegister = () => {
                 email: email,
                 approved: isAdmin 
             });
-            alert("Konto erfolgreich registriert! Warte nun auf die Freischaltung durch den Admin.");
+            alert("Konto erfolgreich registriert!");
         })
         .catch(e => alert("Registrierungs-Fehler: " + e.message));
 };
@@ -86,22 +86,33 @@ window.handleLogout = () => signOut(auth).then(() => location.reload());
 // --- AUTOMATISCHE ÜBERWACHUNG DES AUTH-STATUS ---
 onAuthStateChanged(auth, (user) => {
     if (user) {
-        onSnapshot(doc(db, "users", user.uid), (userSnap) => {
-            if (userSnap.exists()) {
-                currentUserInfo = userSnap.data();
-                if (currentUserInfo.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
-                    userRole = 'admin';
-                } else if (currentUserInfo.approved) {
-                    userRole = 'schiri';
+        // Direkter Admin-Check über E-Mailadresse
+        if (user.email && user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
+            userRole = 'admin';
+            currentUserInfo = { name: "Haupt-Admin", email: user.email, approved: true };
+            
+            // Profil in Firestore absichern, falls es manuell erstellt wurde
+            setDoc(doc(db, "users", user.uid), {
+                uid: user.uid,
+                name: "Haupt-Admin",
+                email: user.email,
+                approved: true
+            }, { merge: true });
+            
+            startApp();
+        } else {
+            // Normale Schiedsrichter über Firestore prüfen
+            onSnapshot(doc(db, "users", user.uid), (userSnap) => {
+                if (userSnap.exists()) {
+                    currentUserInfo = userSnap.data();
+                    userRole = currentUserInfo.approved ? 'schiri' : 'unapproved';
+                    startApp();
                 } else {
                     userRole = 'unapproved';
+                    startApp();
                 }
-                startApp();
-            } else {
-                userRole = 'unapproved';
-                startApp();
-            }
-        });
+            });
+        }
     } else {
         document.getElementById("loginSection").style.display = "block";
         document.getElementById("mainContent").style.display = "none";
@@ -131,6 +142,8 @@ function startApp() {
     
     if (userRole === 'admin') {
         document.querySelectorAll('.admin-only').forEach(e => e.style.display = 'block');
+        
+        // Holt die Schiedsrichter-Registrierungen live ab
         onSnapshot(query(collection(db, "users")), (snaps) => {
             allUsers = [];
             snaps.forEach(d => allUsers.push(d.data()));
@@ -180,7 +193,7 @@ window.updateUserApproval = async (uid, val) => {
     await setDoc(doc(db, "users", uid), { approved: isApproved }, { merge: true });
 };
 
-// --- SPIELPLAN RENDERN (MIT AUTO-ARCHIV) ---
+// --- SPIELPLAN RENDERN ---
 function renderSpieleTable() {
     const tbody = document.querySelector("#spieleTable tbody");
     tbody.innerHTML = "";
@@ -231,8 +244,13 @@ window.updateRow = async (idx, key, val) => {
 
 window.addEntry = async () => {
     if (userRole !== 'admin') return;
-    const heute = new Date().toISOString().split('T')[0];
-    allData.spiele.push({ date: heute, time: "10:00", hall: "", age: "", jsr1: "", jsr2: "", status: "Offen" });
+    
+    // Setzt neue Einträge auf morgen, um Zeitzonen-Archivierungsfehler im Browser zu vermeiden
+    const morgen = new Date();
+    morgen.setDate(morgen.getDate() + 1);
+    const datumString = morgen.toISOString().split('T')[0];
+    
+    allData.spiele.push({ date: datumString, time: "10:00", hall: "", age: "", jsr1: "", jsr2: "", status: "Offen" });
     await setDoc(DOC_REF, { spiele: allData.spiele });
 };
 
