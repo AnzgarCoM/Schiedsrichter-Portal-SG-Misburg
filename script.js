@@ -22,18 +22,20 @@ const ADMIN_EMAIL = "sgmisburgjsr@outlook.de";
 const WHATSAPP_NUMMER = "4915204500763"; 
 
 let currentUserInfo = null;
-let userRole = null; // 'admin', 'schiri' oder 'unapproved'
+let userRole = null; 
 let isLoginMode = true;
 let allData = { spiele: [] };
 let allUsers = [];
 
-// --- WECHSEL ZWISCHEN LOGIN UND REGISTRIERUNG ---
+// --- GLOBAL BINDEN (BEHEBT DAS INITIALISIERUNGS-PROBLEM) ---
 window.toggleAuthMode = () => {
     isLoginMode = !isLoginMode;
     const title = document.getElementById("authTitle");
     const btn = document.getElementById("mainAuthBtn");
     const toggleBtn = document.getElementById("toggleAuthBtn");
     const nameInp = document.getElementById("nameInput");
+
+    if (!title || !btn || !toggleBtn || !nameInp) return;
 
     if (isLoginMode) {
         title.innerText = "Anmelden";
@@ -50,7 +52,6 @@ window.toggleAuthMode = () => {
     }
 };
 
-// --- AUTHENTIFIZIERUNGS-AKTIONEN ---
 window.handleLogin = () => {
     const email = document.getElementById("emailInput").value.trim().toLowerCase();
     const pw = document.getElementById("pwInput").value;
@@ -86,12 +87,14 @@ window.handleLogout = () => signOut(auth).then(() => location.reload());
 // --- AUTOMATISCHE ÜBERWACHUNG DES AUTH-STATUS ---
 onAuthStateChanged(auth, (user) => {
     if (user) {
-        // Direkter Admin-Check über E-Mailadresse
-        if (user.email && user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
+        const userEmailClean = user.email ? user.email.trim().toLowerCase() : "";
+        
+        // KORREKTUR: Knallharter, direkter Vergleich für Admin-E-Mail
+        if (userEmailClean === ADMIN_EMAIL.toLowerCase()) {
             userRole = 'admin';
             currentUserInfo = { name: "Haupt-Admin", email: user.email, approved: true };
             
-            // Profil in Firestore absichern, falls es manuell erstellt wurde
+            // Backup: Falls das Profildokument fehlt, erzwingen wir es hier
             setDoc(doc(db, "users", user.uid), {
                 uid: user.uid,
                 name: "Haupt-Admin",
@@ -196,6 +199,7 @@ window.updateUserApproval = async (uid, val) => {
 // --- SPIELPLAN RENDERN ---
 function renderSpieleTable() {
     const tbody = document.querySelector("#spieleTable tbody");
+    if (!tbody) return;
     tbody.innerHTML = "";
     const isAdmin = (userRole === 'admin');
     const heute = new Date().toISOString().split('T')[0];
@@ -245,7 +249,6 @@ window.updateRow = async (idx, key, val) => {
 window.addEntry = async () => {
     if (userRole !== 'admin') return;
     
-    // Setzt neue Einträge auf morgen, um Zeitzonen-Archivierungsfehler im Browser zu vermeiden
     const morgen = new Date();
     morgen.setDate(morgen.getDate() + 1);
     const datumString = morgen.toISOString().split('T')[0];
@@ -268,11 +271,13 @@ window.sendWhatsApp = (d, t, h, a) => {
 };
 
 function updateDashboard() {
+    const dash = document.getElementById("dashboard");
+    if (!dash) return;
     const gesamtSpiele = allData.spiele.length;
     const offen = allData.spiele.filter(s => s.status === 'Offen').length;
     const besetzt = gesamtSpiele - offen;
 
-    document.getElementById("dashboard").innerHTML = `
+    dash.innerHTML = `
         <div class="stat-card" style="background:var(--primary-blue)"><b>${gesamtSpiele}</b> Gesamt (Saison)</div>
         <div class="stat-card" style="background:var(--danger-red)"><b>${offen}</b> Aktuell Offen</div>
         <div class="stat-card" style="background:var(--success-green)"><b>${besetzt}</b> Besetzt</div>
