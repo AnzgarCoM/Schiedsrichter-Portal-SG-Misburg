@@ -115,14 +115,22 @@ function startApp() {
         });
     }
 
-    // Beide Datenbank-Inhalte gleichzeitig live überwachen
+    // Beide Datenbank-Inhalte gleichzeitig live überwachen mit Strukturabsicherung
     onSnapshot(SAISON_REF, (snap) => {
-        if (snap.exists()) saisonData.spiele = Array.isArray(snap.data().spiele) ? snap.data().spiele : [];
+        if (snap.exists()) {
+            saisonData.spiele = Array.isArray(snap.data().spiele) ? snap.data().spiele : [];
+        } else if (userRole === 'admin') {
+            setDoc(SAISON_REF, { spiele: [] });
+        }
         renderSaisonTables(); updateDashboard();
     });
 
     onSnapshot(TURNIER_REF, (snap) => {
-        if (snap.exists()) turnierData.spiele = Array.isArray(snap.data().spiele) ? snap.data().spiele : [];
+        if (snap.exists()) {
+            turnierData.spiele = Array.isArray(snap.data().spiele) ? snap.data().spiele : [];
+        } else if (userRole === 'admin') {
+            setDoc(TURNIER_REF, { spiele: [] });
+        }
         renderTurnierTables(); updateDashboard();
     });
 }
@@ -174,7 +182,7 @@ function renderSaisonTables() {
                 <td><input type="text" value="${item.jsr3||''}" ${!isAdmin?'disabled':''} onchange="updateSaisonRow(${realIdx},'jsr3',this.value)"></td>
                 <td><select ${!isAdmin?'disabled':''} onchange="updateSaisonRow(${realIdx},'status',this.value)" class="status-select ${item.status==='Offen'?'red':'green'}"><option value="Offen" ${item.status==='Offen'?'selected':''}>Offen</option><option value="Besetzt" ${item.status==='Besetzt'?'selected':''}>Besetzt</option></select></td>
                 <td>${item.status==='Offen'?`<button class="whatsapp-btn" onclick="sendWhatsAppSaison('${item.date}','${item.time}','${item.hall}','${item.age}')">Melden 🟢</button>`:'Besetzt'}</td>
-                ${isAdmin?`<td><button onclick="deleteSaisonEntry(${realIdx})">🗑️</button></td>`:''} `;
+                ${isAdmin?`<td><button style="background:none; border:none; cursor:pointer;" onclick="deleteSaisonEntry(${realIdx})">🗑️</button></td>`:''} `;
             if (bTurnier) bTurnier.appendChild(tr);
         } else {
             tr.innerHTML = `
@@ -189,7 +197,7 @@ function renderSaisonTables() {
                 <td><input type="text" value="${item.jsr2||''}" ${!isAdmin?'disabled':''} onchange="updateSaisonRow(${realIdx},'jsr2',this.value)"></td>
                 <td><select ${!isAdmin?'disabled':''} onchange="updateSaisonRow(${realIdx},'status',this.value)" class="status-select ${item.status==='Offen'?'red':'green'}"><option value="Offen" ${item.status==='Offen'?'selected':''}>Offen</option><option value="Besetzt" ${item.status==='Besetzt'?'selected':''}>Besetzt</option></select></td>
                 <td>${item.status==='Offen'?`<button class="whatsapp-btn" onclick="sendWhatsAppSaison('${item.date}','${item.time}','${item.hall}','${item.age}')">Melden 🟢</button>`:'Besetzt'}</td>
-                ${isAdmin?`<td><button onclick="deleteSaisonEntry(${realIdx})">🗑️</button></td>`:''} Meso`;
+                ${isAdmin?`<td><button style="background:none; border:none; cursor:pointer;" onclick="deleteSaisonEntry(${realIdx})">🗑️</button></td>`:''} `;
             if (typ === 'testspiel' && bTest) bTest.appendChild(tr);
             else if (bMeister) bMeister.appendChild(tr);
         }
@@ -231,7 +239,7 @@ function renderTurnierTables() {
             <td><input type="text" value="${item.jsr2||''}" ${!isAdmin?'disabled':''} onchange="updateTurnierRow(${realIdx},'jsr2',this.value)"></td>
             <td><select ${!isAdmin?'disabled':''} onchange="updateTurnierRow(${realIdx},'status',this.value)" class="status-select ${item.status==='Offen'?'red':'green'}"><option value="Offen" ${item.status==='Offen'?'selected':''}>Offen</option><option value="Besetzt" ${item.status==='Besetzt'?'selected':''}>Besetzt</option></select></td>
             <td>${item.status==='Offen'?`<button class="whatsapp-btn" onclick="sendWhatsAppTurnier('${turnierTag}','${item.time}','${item.hall}','${item.age}','${item.teams}')">Melden 🟢</button>`:'Besetzt'}</td>
-            ${isAdmin?`<td><button onclick="deleteTurnierEntry(${realIdx})">🗑️</button></td>`:''}`;
+            ${isAdmin?`<td><button style="background:none; border:none; cursor:pointer;" onclick="deleteTurnierEntry(${realIdx})">🗑️</button></td>`:''}`;
         
         if (turnierTag === 'tag1' && bTag1) bTag1.appendChild(tr);
         else if (turnierTag === 'tag2' && bTag2) bTag2.appendChild(tr);
