@@ -1,260 +1,569 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Schiedsrichter Portal - SG Misburg</title>
-    <style>
-        :root {
-            --primary-blue: #0033a0;
-            --accent-blue: #1a4fb0;
-            --whatsapp-green: #25D366;
-            --danger-red: #e53e3e;
-            --success-green: #38a169;
-            --bg-gray: #f0f2f5;
-            --white: #ffffff;
-            --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-
-        body {
-            font-family: 'Segoe UI', Roboto, sans-serif;
-            background-color: var(--bg-gray);
-            margin: 0;
-            padding: 0;
-            color: #1a202c;
-        }
-
-        header {
-            background: var(--primary-blue);
-            color: white;
-            padding: 1rem 2rem;
-            box-shadow: var(--shadow);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        header h1 { margin: 0; font-size: 1.4rem; }
-
-        .card {
-            background: var(--white);
-            max-width: 1400px;
-            margin: 20px auto;
-            padding: 22px;
-            border-radius: 12px;
-            box-shadow: var(--shadow);
-            border: 1px solid #e2e8f0;
-        }
-
-        /* Navigation Tabs */
-        .tab-navigation {
-            display: flex;
-            gap: 10px;
-            margin: 20px auto;
-            max-width: 1400px;
-            padding: 0 22px;
-        }
-
-        .tab-btn {
-            flex: 1;
-            padding: 12px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            border: 2px solid var(--primary-blue);
-            background: white;
-            color: var(--primary-blue);
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .tab-btn.active {
-            background: var(--primary-blue);
-            color: white;
-        }
-
-        .block-title {
-            color: var(--primary-blue);
-            border-bottom: 2px solid var(--primary-blue);
-            padding-bottom: 5px;
-            margin-top: 30px;
-            margin-bottom: 15px;
-        }
-
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 15px;
-            margin-top: 10px;
-        }
-
-        .stat-card {
-            padding: 18px;
-            border-radius: 10px;
-            color: white;
-            text-align: center;
-            font-weight: 500;
-        }
-
-        .table-container {
-            overflow-x: auto;
-            margin-top: 15px;
-            border-radius: 8px;
-            border: 1px solid #edf2f7;
-            background: white;
-        }
-
-        table { width: 100%; border-collapse: collapse; min-width: 1100px; }
-        th { background: #f8fafc; padding: 14px 12px; text-align: left; font-size: 0.75rem; color: #64748b; border-bottom: 2px solid #edf2f7; }
-        td { padding: 10px 12px; border-bottom: 1px solid #edf2f7; vertical-align: middle; }
-        tr:hover { background-color: #f9fafb; }
-
-        .status-select { font-weight: bold; padding: 6px 10px; border-radius: 6px; border: 1px solid #cbd5e0; }
-        .status-select.red { color: var(--danger-red); background-color: #fff5f5; }
-        .status-select.green { color: var(--success-green); background-color: #f0fff4; }
-
-        input, select { border: 1px solid #cbd5e0; padding: 8px; border-radius: 6px; width: 100%; box-sizing: border-box; }
-        input:disabled, select:disabled { background: transparent; border: none; color: #2d3748; font-weight: 500; }
-
-        .google-btn {
-            background-color: #4285F4;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            font-size: 1rem;
-            font-weight: bold;
-            border-radius: 8px;
-            cursor: pointer;
-            display: block;
-            margin: 20px auto;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        }
-        .google-btn:hover { background-color: #357ae8; }
-
-        .btn-success { background-color: var(--success-green); color: white; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        .whatsapp-btn { background-color: var(--whatsapp-green); color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; }
-        .logout-btn { background: rgba(255,255,255,0.2); border: 1px solid white; color: white; padding: 6px 12px; border-radius: 20px; cursor: pointer; }
-        .section-header { display: flex; justify-content: space-between; align-items: center; }
-        .sub-text { color: #64748b; font-size: 0.9rem; margin-top: -5px; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>SG Misburg - Jungschiedsrichter Plattform</title>
+<style>
+:root{--nav:#062447;--blue:#062b55;--orange:#ff7a00;--bg:#eef3f7;--card:#fff;--line:#d6dee8;--muted:#607089}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:var(--bg);color:#07111f}button,input,select,textarea{font:inherit}\
+.login{min-height:100vh;display:grid;place-items:center;background:linear-gradient(135deg,#061d38,#123e6c)}
+.loginBox,.card{background:white;border:1px solid var(--line);border-radius:14px;box-shadow:0 2px 8px #0001}
+.loginBox{width:min(430px,92vw);padding:28px}
+.app{display:flex;min-height:100vh}.side{width:252px;background:#082545;color:white;position:fixed;inset:0 auto 0 0;padding:16px 12px;overflow:auto}.main{margin-left:252px;width:calc(100% - 252px)}
+.brand{display:flex;gap:12px;align-items:center;padding:10px 4px 18px;border-bottom:1px solid #ffffff22}.logo{width:38px;height:38px;border-radius:12px;background:var(--orange);display:grid;place-items:center;color:white;font-weight:900}
+.section{margin:22px 8px 8px;color:#9bc3ec;font-size:12px;text-transform:uppercase;letter-spacing:.12em;font-weight:800}
+.navbtn{width:100%;border:0;background:transparent;color:#cbd5e1;border-radius:9px;padding:11px 12px;display:flex;gap:12px;cursor:pointer;font-weight:700;text-align:left}.navbtn:hover,.navbtn.active{background:#123e6c;color:#fff}
+header{height:56px;background:white;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 16px}.page{padding:16px}.hidden{display:none!important}
+.hero{background:linear-gradient(135deg,#062447,#124e8c);color:white;border-radius:14px;padding:30px 28px}.hero h1{margin:6px 0;font-size:30px}.orange{color:var(--orange)}
+.grid{display:grid;gap:16px}.grid4{grid-template-columns:repeat(4,minmax(180px,1fr))}.grid2{grid-template-columns:repeat(2,minmax(250px,1fr))}
+.pad{padding:16px}.mt{margin-top:16px}.stat{padding:18px}.stat strong{font-size:24px;display:block}.ico{width:36px;height:36px;background:#eef3f7;border-radius:9px;display:grid;place-items:center;margin-bottom:12px}.muted{color:var(--muted);font-size:13px}
+.input,.select,textarea{width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 12px;background:white;margin:4px 0 10px}
+.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px}.full{grid-column:1/-1}
+.btn{border:0;border-radius:8px;padding:10px 14px;background:#e2e8f0;color:#07111f;font-weight:800;cursor:pointer}.btn.primary{background:#062b55;color:white}.btn.danger{background:#fee2e2;color:#991b1b}.btn.ok{background:#dcfce7;color:#166534}.btn.small{padding:7px 10px;font-size:13px}
+.table{width:100%;border-collapse:collapse}.table th,.table td{border-bottom:1px solid var(--line);padding:13px;text-align:left}.table th{background:#f8fafc;color:#64748b}
+.pill{display:inline-flex;border-radius:999px;padding:4px 9px;font-size:12px;font-weight:800}.pill.ok{background:#dcfce7;color:#15803d}.pill.bad{background:#fee2e2;color:#b91c1c}.pill.off{background:#f1f5f9;color:#475569}
+.toolbar{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap}.avatar{height:64px;width:64px;border-radius:16px;background:#e2e8f0;display:grid;place-items:center;font-weight:900;color:#062447;font-size:22px}
+.modalBg{position:fixed;inset:0;background:#0008;display:none;align-items:center;justify-content:center;z-index:20}.modal{width:min(620px,92vw);background:white;border-radius:10px;padding:24px;max-height:90vh;overflow-y:auto}
+.badgePreview{width:260px;height:245px;margin:16px auto;border:2px solid #cbd5e1;border-radius:16px;background:linear-gradient(135deg,#fff,#fff7ed);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.done-task { text-decoration: line-through; color: var(--muted); opacity: 0.6; }
+@media(max-width:900px){.side{position:relative;width:100%;height:auto}.app{display:block}.main{margin-left:0;width:100%}.grid4,.grid2,.formgrid{grid-template-columns:1fr}}
+</style>
 </head>
 <body>
 
-    <header>
-        <h1 id="userStatus">JSR Portal</h1>
-        <button id="logoutBtn" class="logout-btn" onclick="window.handleLogout()" style="display: none;">Abmelden 🚪</button>
-    </header>
+<div id="loginPage" class="login">
+<div class="loginBox">
+<h2>SG Misburg - JSR Login</h2>
+<p class="muted">Vereinsinterne Jungschiedsrichter-Plattform</p>
+<label>E-Mail</label><input id="loginEmail" class="input" placeholder="sgmisburgjsr@outlook.de">
+<label>Passwort</label><input id="loginPass" type="password" class="input" placeholder="••••••••">
+<button class="btn primary" onclick="window.login()" style="background:var(--orange); width:100%;">Einloggen</button>
+<p id="loginError" style="color:#b91c1c; font-weight:bold; margin-top:10px;"></p>
+</div>
+</div>
 
-    <main>
-        <section id="loginSection" class="card" style="text-align: center;">
-            <h2>Willkommen beim JSR-Portal</h2>
-            <p>Bitte melde dich mit deinem Google-Konto an, um fortzufahren.</p>
-            <button id="googleLoginBtn" class="google-btn">Anmelden mit Google 🚀</button>
-        </section>
+<div id="app" class="app hidden">
+<aside class="side">
+<div class="brand"><div class="logo">SGM</div><div><b>SG Misburg</b><br><span class="muted" style="color:#9bc3ec">Jung-Schiris</span></div></div>
+<div class="section">Allgemein</div>
+<button class="navbtn active" onclick="window.showPage('start',this)">⌂ Startseite</button>
+<button class="navbtn" onclick="window.showPage('dashboard',this)">▦ Dashboard</button>
+<div class="section">Kaderverwaltung</div>
+<button class="navbtn" onclick="window.showPage('register',this)">☷ JSR registrieren</button>
+<button class="navbtn" onclick="window.showPage('referees',this)">♙ JSR-Kartei</button>
+<button class="navbtn" onclick="window.showPage('games',this)">▤ Spiele & Ansetzungen</button>
+<div class="section">System</div>
+<button class="navbtn" onclick="window.showPage('logs',this)">▧ System-Logs</button>
+<button class="navbtn" onclick="window.showPage('admin',this)">⚙ Admin Panel</button>
+</aside>
 
-        <section id="approvalWaitSection" class="card" style="display: none; text-align: center;">
-            <h2>⏳ Registrierung erfolgreich</h2>
-            <p>Bitte warte kurz, bis der Admin dich freigeschaltet hat.</p>
-        </section>
+<main class="main">
+<header><div><b id="title">Startseite</b><div id="sub" class="muted"></div></div><div><span id="who" class="muted"></span> <button class="btn small" onclick="window.logout()">Logout</button></div></header>
+<section id="start" class="page"></section>
+<section id="dashboard" class="page hidden"></section>
+<section id="register" class="page hidden"></section>
+<section id="referees" class="page hidden"></section>
+<section id="games" class="page hidden"></section>
+<section id="logs" class="page hidden"></section>
+<section id="admin" class="page hidden"></section>
+</main>
+</div>
 
-        <div id="mainContent" style="display: none;">
-            
-            <div class="tab-navigation">
-                <button id="tabSaisonBtn" class="tab-btn active" onclick="window.switchView('saison')">📅 Regulärer Spielplan</button>
-                <button id="tabTurnierBtn" class="tab-btn" onclick="window.switchView('turnier')">🤾 Turnier-Planung</button>
-            </div>
+<div id="modalBg" class="modalBg"><div id="modal" class="modal"></div></div>
 
-            <section id="dashboard" class="dashboard-grid card"></section>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
+import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-            <section class="card admin-only" style="display: none;">
-                <h2>👥 Schiedsrichter-Freischaltung (Admin)</h2>
-                <div class="table-container">
-                    <table id="usersTable">
-                        <thead><tr><th>Name</th><th>E-Mail</th><th>Status</th></tr></thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-            </section>
+// Deine neue Firebase Web-App-Konfiguration
+const firebaseConfig = {
+  apiKey: "AIzaSyC27vfNJL-mxl5wtg69WsWPkaceEP6yUjs",
+  authDomain: "jsr-1-d3000.firebaseapp.com",
+  projectId: "jsr-1-d3000",
+  storageBucket: "jsr-1-d3000.firebasestorage.app",
+  messagingSenderId: "909465128275",
+  appId: "1:909465128275:web:7729bcda224ae767ff65a6",
+  measurementId: "G-1M0XS7JMGW"
+};
 
-            <div id="viewSaison" class="view-section">
-                <div class="card">
-                    <h2>📅 Regulärer JSR Ansetzungsplan (Saison)</h2>
-                    
-                    <h3 class="block-title">🏆 Meisterschaftsspiele (m/w D-Jugend)</h3>
-                    <div class="section-header">
-                        <p class="sub-text">Reguläre Saisonspiele der D-Jugendlichen.</p>
-                        <button class="btn btn-success admin-only" style="display: none;" onclick="window.addSaisonEntry('meisterschaft')">+ Spiel hinzufügen</button>
-                    </div>
-                    <div class="table-container">
-                        <table id="tableMeisterschaft">
-                            <thead><tr><th>Datum</th><th>Zeit</th><th>Halle</th><th>Altersklasse / Spiel</th><th>JSR 1</th><th>JSR 2</th><th>Status</th><th>Aktion</th><th class="admin-only" style="display: none;">Löschen</th></tr></thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
+// Initialisiere Firebase & Firestore
+const fApp = initializeApp(firebaseConfig);
+const analytics = getAnalytics(fApp);
+const firestoreDb = getFirestore(fApp);
+const DOC_REF = doc(firestoreDb, "hr_platform", "database");
 
-                    <h3 class="block-title">🎪 Turniere (m/w E- & F-Jugend)</h3>
-                    <div class="section-header">
-                        <p class="sub-text">Spielfeste und Turniere mit Platz für 3 Schiedsrichter.</p>
-                        <button class="btn btn-success admin-only" style="display: none;" onclick="window.addSaisonEntry('turnier')">+ Turnier hinzufügen</button>
-                    </div>
-                    <div class="table-container">
-                        <table id="tableTurniere">
-                            <thead><tr><th>Datum</th><th>Zeit</th><th>Halle</th><th>Altersklasse / Turnier</th><th>JSR 1</th><th>JSR 2</th><th>JSR 3</th><th>Status</th><th>Aktion</th><th class="admin-only" style="display: none;">Löschen</th></tr></thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
+let currentUser = null;
 
-                    <h3 class="block-title">🔬 Testspiele (m/w D-Jugend)</h3>
-                    <div class="section-header">
-                        <p class="sub-text">Freundschafts- und Vorbereitungsspiele der D-Jugend.</p>
-                        <button class="btn btn-success admin-only" style="display: none;" onclick="window.addSaisonEntry('testspiel')">+ Testspiel hinzufügen</button>
-                    </div>
-                    <div class="table-container">
-                        <table id="tableTestspiele">
-                            <thead><tr><th>Datum</th><th>Zeit</th><th>Halle</th><th>Altersklasse / Spiel</th><th>JSR 1</th><th>JSR 2</th><th>Status</th><th>Aktion</th><th class="admin-only" style="display: none;">Löschen</th></tr></thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+const seed = {
+  users: [
+    {email: "sgmisburgjsr@outlook.de", password: "JSR_SGMisburg2026!", name: "SG Misburg Admin", role: "Admin", active: true}
+  ],
+  referees: [], games: [], logs: [], todos: []
+};
 
-            <div id="viewTurnier" class="view-section" style="display: none;">
-                <div class="card">
-                    <h2>🤾 Großes Vereins-Turnier & Einteilung</h2>
-                    
-                    <h3 class="block-title">📅 Tag 1: m/w C-, B-, A-Jugend & Senioren</h3>
-                    <div class="section-header">
-                        <p class="sub-text">Spiele der älteren Jahrgänge und Erwachsenenteams.</p>
-                        <button class="btn btn-success admin-only" style="display: none;" onclick="window.addTurnierEntry('tag1')">+ Spiel hinzufügen (Tag 1)</button>
-                    </div>
-                    <div class="table-container">
-                        <table id="tableTag1">
-                            <thead>
-                                <tr><th>Uhrzeit</th><th>Feld / Halle</th><th>Altersklasse</th><th>Begegnung</th><th>Schiri 1</th><th>Schiri 2</th><th>Status</th><th>Aktion</th><th class="admin-only" style="display: none;">Löschen</th></tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
+let db = JSON.parse(JSON.stringify(seed));
 
-                    <h3 class="block-title">📅 Tag 2: m/w E-Jugend & D-Jugend</h3>
-                    <div class="section-header">
-                        <p class="sub-text">Spiele der jüngeren Nachwuchsmannschaften.</p>
-                        <button class="btn btn-success admin-only" style="display: none;" onclick="window.addTurnierEntry('tag2')">+ Spiel hinzufügen (Tag 2)</button>
-                    </div>
-                    <div class="table-container">
-                        <table id="tableTag2">
-                            <thead>
-                                <tr><th>Uhrzeit</th><th>Feld / Halle</th><th>Altersklasse</th><th>Begegnung</th><th>Schiri 1</th><th>Schiri 2</th><th>Status</th><th>Aktion</th><th class="admin-only" style="display: none;">Löschen</th></tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+async function loadDB() {
+  try {
+    const snap = await getDoc(DOC_REF);
+    if (!snap.exists()) {
+      await setDoc(DOC_REF, seed);
+      db = JSON.parse(JSON.stringify(seed));
+    } else {
+      db = snap.data();
+      if (!db.users) db.users = JSON.parse(JSON.stringify(seed.users));
+      
+      let hasMyAdmin = db.users.some(x => x.email.toLowerCase() === "sgmisburgjsr@outlook.de");
+      if (!hasMyAdmin) {
+        db.users.push({email: "sgmisburgjsr@outlook.de", password: "JSR_SGMisburg2026!", name: "SG Misburg Admin", role: "Admin", active: true});
+        await setDoc(DOC_REF, db);
+      } else {
+        db.users.forEach(u => {
+          if(u.email.toLowerCase() === "sgmisburgjsr@outlook.de") {
+            u.active = true;
+            u.role = "Admin";
+            u.password = "JSR_SGMisburg2026!";
+            u.name = "SG Misburg Admin";
+          }
+        });
+      }
+      if (!db.referees) db.referees = [];
+      if (!db.games) db.games = [];
+      if (!db.todos) db.todos = [];
+    }
+  } catch (e) {
+    console.error("Fehler beim Laden:", e);
+  }
+}
 
-        </div>
-    </main>
+async function saveDB() {
+  try {
+    await setDoc(DOC_REF, db);
+  } catch (e) {
+    console.error("Fehler beim Speichern:", e);
+  }
+}
 
-    <script type="module" src="script.js"></script>
+function uid() { return String(Math.floor(100000 + Math.random() * 900000)); }
+function esc(v) { return String(v ?? "").replace(/[&<>"']/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m])); }
+
+async function logAction(t) {
+  if (!db.logs) db.logs = [];
+  db.logs.unshift({ at: new Date().toLocaleString("de-DE"), user: currentUser?.email || "System", text: t });
+  await saveDB();
+}
+
+function refereeName(r) { return `${r.first} ${r.last}`; }
+function initials(r) { return ((r.first?.[0] || "") + (r.last?.[0] || "")).toUpperCase(); }
+function isAdmin() { return currentUser && currentUser.role === "Admin"; }
+
+window.login = async function() {
+  const errorElement = document.getElementById("loginError");
+  errorElement.textContent = "Verbindung wird aufgebaut...";
+  await loadDB();
+  let email = document.getElementById("loginEmail").value.trim().toLowerCase(), 
+      pass = document.getElementById("loginPass").value;
+  let u = db.users.find(x => x.email.toLowerCase() === email && x.password === pass);
+  
+  if (!u) { errorElement.textContent = "Login fehlgeschlagen. Falsche Daten."; return; }
+  if (!u.active && email !== "sgmisburgjsr@outlook.de") { errorElement.textContent = "Dieser Account wurde gesperrt."; return; }
+  
+  currentUser = u; 
+  document.getElementById("loginPage").classList.add("hidden"); 
+  document.getElementById("app").classList.remove("hidden"); 
+  document.getElementById("who").textContent = `${u.email} (${u.role})`; 
+  renderAll(); 
+  await logAction("Login erfolgreich");
+}
+
+window.logout = function() { 
+  currentUser = null; 
+  document.getElementById("loginEmail").value=""; 
+  document.getElementById("loginPass").value=""; 
+  document.getElementById("loginError").textContent=""; 
+  document.getElementById("app").classList.add("hidden"); 
+  document.getElementById("loginPage").classList.remove("hidden"); 
+}
+
+window.showPage = function(id, btn) {
+  document.querySelectorAll(".page").forEach(p => p.classList.add("hidden"));
+  document.getElementById(id).classList.remove("hidden");
+  document.querySelectorAll(".navbtn").forEach(b => b.classList.remove("active"));
+  if (btn) btn.classList.add("active");
+  document.getElementById("title").textContent = { start: "Startseite", dashboard: "Dashboard", register: "Jung-Schiedsrichter registrieren", referees: "JSR-Kartei", games: "Spiele & Ansetzungen", logs: "System-Logs", admin: "Admin Panel" }[id];
+  renderAll();
+}
+
+function stat(label, val, sub, ico) { return `<div class="card stat"><div class="ico">${ico}</div><strong>${val}</strong><div>${label}</div><div class="muted">${sub || ""}</div></div>`; }
+
+function renderAll() { renderStart(); renderDashboard(); renderRegister(); renderReferees(); renderGames(); renderLogs(); renderAdmin(); }
+
+function renderStart() {
+  let totalSR = db.referees.length;
+  let activeSR = db.referees.filter(r => r.status === "Aktiv").length;
+  let lockedSR = db.referees.filter(r => r.status === "Gesperrt").length;
+  let openTodos = db.todos ? db.todos.filter(t => !t.done).length : 0;
+  document.getElementById("start").innerHTML = `
+<div class="hero"><div>SG Misburg Vereinsintern</div><h1>Willkommen im <span class="orange">JSR-Verwaltungsportal</span></h1><p>Planung, Jugendsperren und Ansetzungen für vereinseigene Jungschiedsrichter.</p></div>
+<div class="grid grid4 mt">
+${stat("Einsatzbereite JSR", activeSR, "bereit für Jugendspiele", "🏃")}
+${stat("Interne Sperren", lockedSR, "Inaktiv gesetzt", "🟥")}
+${stat("Offene To-Dos", openTodos, "interne Tasks", "📝")}
+${stat("Registrierte JSR", totalSR, "Vereinskader", "📋")}
+</div>
+<div class="grid grid2 mt">
+<div><h4>ZULÄSSIGE SPIELKLASSEN (INFO)</h4><div class="card pad"><p>Jungschiedsrichter dürfen vereinsintern ausschließlich folgende Partien leiten:</p><ul><li><b>Minis / F-Jugend</b> (Turniere / Spielfeste)</li><li><b>E-Jugend</b> (männlich / weiblich)</li><li><b>D-Jugend</b> (männlich / weiblich)</li></ul><span class="pill bad">Achtung!</span> Höhere Klassen (C-Jugend aufwärts) werden vom System blockiert!</div></div>
+<div><div class="card pad"><b>Neueste Jungschiedsrichter</b>${db.referees.slice(-3).reverse().map(r => `<p><b>${esc(refereeName(r))}</b><br><span class="muted">Einsatzklasse: ${esc(r.class)} · ID: ${r.id}</span></p>`).join("") || '<p class="muted">Noch keine JSR eingetragen.</p>'}</div></div>
+</div>`;
+}
+
+function renderDashboard() {
+  document.getElementById("dashboard").innerHTML = `<div class="grid grid4">
+${stat("Jung-Schiris", db.referees.length, "Vereinsmitglieder", "♙")}
+${stat("Betreuer / Admin-Logins", db.users.length, "Zugänge", "⚙")}
+${stat("Eingepflegte Spiele", db.games ? db.games.length : 0, "Spielplan", "⚽")}
+${stat("Systemaktionen", db.logs ? db.logs.length : 0, "Protokolliert", "▧")}
+</div>`;
+}
+
+function inp(n, l, p, req = false, type = "text", cls = "") { return `<label class="${cls}">${l}<input class="input" name="${n}" placeholder="${p}" ${req ? "required" : ""} type="${type}"></label>`; }
+
+function renderRegister() {
+  document.getElementById("register").innerHTML = `<div class="card pad" style="max-width:780px"><h3>Neuen Jungschiedsrichter registrieren</h3>
+<form class="formgrid" onsubmit="window.createReferee(event)">
+${inp("first", "Vorname *", "Vorname", true)}
+${inp("last", "Nachname *", "Nachname", true)}
+${inp("email", "E-Mail-Adresse *", "E-Mail der Eltern / JSR", true, "email")}
+${inp("phone", "Telefonnummer (Mobil/Eltern)", "Telefonnummer")}
+${inp("address", "Anschrift", "Straße, PLZ, Ort", false, "text", "full")}
+${inp("birth", "Geburtsdatum", "", false, "date")}
+<label>Einsatzgrenze (Höchste Jugend)<select name="class" class="select"><option value="Minis / F-Jugend Turniere">Minis / F-Jugend Turniere</option><option value="m/w E-Jugend & tiefer">m/w E-Jugend & tiefer</option><option value="m/w D-Jugend & tiefer">m/w D-Jugend & tiefer (Maximum)</option></select></label>
+${inp("association", "Vereins-Abteilung", "z.B. SG Misburg Handball / Fussball")}
+<div class="full"><button class="btn primary" style="background:var(--orange)">In JSR-Kader aufnehmen</button></div>
+</form></div>`;
+}
+
+window.createReferee = async function(ev) {
+  ev.preventDefault();
+  let r = Object.fromEntries(new FormData(ev.target).entries());
+  r.id = uid(); r.status = "Aktiv"; r.activeGames = 0;
+  db.referees.push(r); await saveDB(); await logAction("JSR registriert: " + refereeName(r)); ev.target.reset(); window.showPage("referees");
+}
+
+function renderReferees() {
+  let rows = db.referees.map(r => `<tr>
+    <td><b>${esc(refereeName(r))}</b><br><span class="muted">Max: ${esc(r.class)} · ID ${r.id}</span></td>
+    <td>${esc(r.email)}</td><td>${esc(r.association || "SG Misburg")}</td>
+    <td><span class="pill ${r.status === 'Aktiv' ? 'ok' : 'bad'}">${esc(r.status)}</span></td>
+    <td>
+      <button class="btn small primary" onclick="window.openReferee('${r.id}')">Digitaler Pass</button> 
+      <button class="btn small" onclick="window.editReferee('${r.id}')">Bearbeiten</button> 
+      <button class="btn small ${r.status === 'Aktiv' ? 'danger' : 'ok'}" onclick="window.toggleRefereeStatus('${r.id}')">
+        ${r.status === 'Aktiv' ? 'Sperren' : 'Entsperren'}
+      </button>
+      ${isAdmin() ? `<button class="btn small danger" onclick="window.deleteReferee('${r.id}')">Löschen</button>` : ''}
+    </td>
+  </tr>`).join("");
+  document.getElementById("referees").innerHTML = `<div class="card pad toolbar"><input class="input" style="max-width:350px" oninput="window.filterTable('refTable',this.value)" placeholder="Nach Name oder Altersklasse filtern..."><button class="btn primary" onclick="window.showPage('register')" style="background:var(--orange)">+ JSR hinzufügen</button></div>
+<div class="card mt"><table class="table" id="refTable"><thead><tr><th>Jungschiedsrichter</th><th>E-Mail / Kontakt</th><th>Sparte</th><th>Status</th><th>Aktionen</th></tr></thead><tbody>${rows || '<tr><td colspan="5" style="text-align:center">Keine Jungschiedsrichter im Kader eingetragen</td></tr>'}</tbody></table></div>`;
+}
+
+window.openReferee = function(id) {
+  let r = db.referees.find(x => x.id === id);
+  window.modalOpen(`<div style="display:flex;gap:16px;align-items:center"><div class="avatar">${initials(r)}</div><div><h2>${esc(refereeName(r))}</h2><p>Max. Klasse: ${esc(r.class)} · ID ${r.id}<br><span class="pill ${r.status === 'Aktiv' ? 'ok' : 'bad'}">${r.status}</span></p></div></div>
+<div class="badgePreview"><b>JUNG-SCHIEDSRICHTER AUSWEIS</b><div class="avatar" style="margin:18px; background:var(--orange); color:white;">${initials(r)}</div><h3>${esc(refereeName(r))}</h3><p>Erlaubnis: ${esc(r.class)}</p><hr style="width:80%"><p>SG Misburg Intern / ID: ${r.id}</p></div>
+<div class="grid grid2">${["email", "phone", "address", "birth", "class", "association"].map(k => `<div class="card pad"><span class="muted">${k}</span><br><b>${esc(r[k] || "—")}</b></div>`).join("")}</div>
+<p style="text-align:right; margin-top:20px;"><button class="btn" onclick="window.modalClose()">Schließen</button></p>`);
+}
+
+window.editReferee = function(id) {
+  let r = db.referees.find(x => x.id === id);
+  window.modalOpen(`<h3>JSR-Stammdaten bearbeiten</h3><form class="formgrid" onsubmit="window.saveReferee(event,'${id}')">
+  <label>Vorname<input class="input" name="first" value="${esc(r.first)}"></label>
+  <label>Nachname<input class="input" name="last" value="${esc(r.last)}"></label>
+  <label>E-Mail<input class="input" name="email" value="${esc(r.email)}"></label>
+  <label>Telefon<input class="input" name="phone" value="${esc(r.phone)}"></label>
+  <label class="full">Adresse<input class="input" name="address" value="${esc(r.address)}"></label>
+  <label>Einsatzklasse<select name="class" class="select"><option value="Minis / F-Jugend Turniere" ${r.class.includes('Minis')?'selected':''}>Minis / F-Jugend Turniere</option><option value="m/w E-Jugend & tiefer" ${r.class.includes('E-Jugend')?'selected':''}>m/w E-Jugend & tiefer</option><option value="m/w D-Jugend & tiefer" ${r.class.includes('D-Jugend')?'selected':''}>m/w D-Jugend & tiefer (Maximum)</option></select></label>
+  <label>Sparte/Abteilung<input class="input" name="association" value="${esc(r.association)}"></label>
+<div class="full"><button class="btn primary">Änderungen Speichern</button> <button type="button" class="btn" onclick="window.modalClose()">Abbrechen</button></div></form>`);
+}
+
+window.saveReferee = async function(ev, id) {
+  ev.preventDefault();
+  let targetSR = db.referees.find(x => x.id === id);
+  Object.assign(targetSR, Object.fromEntries(new FormData(ev.target).entries()));
+  await saveDB(); await logAction("Stammdaten angepasst für JSR: " + refereeName(targetSR)); window.modalClose(); renderAll();
+}
+
+window.toggleRefereeStatus = async function(id) {
+  let r = db.referees.find(x => x.id === id);
+  r.status = r.status === "Aktiv" ? "Gesperrt" : "Aktiv";
+  await saveDB(); await logAction(`Status geändert für JSR ${refereeName(r)} auf: ${r.status}`); renderAll();
+}
+
+window.deleteReferee = async function(id) {
+  if (confirm("Möchtest du diesen Jungschiedsrichter wirklich aus der vereinsinternen Liste der SG Misburg löschen?")) {
+    db.referees = db.referees.filter(r => r.id !== id);
+    await saveDB(); await logAction("JSR aus Kartei gelöscht. ID: " + id); renderAll();
+  }
+}
+
+function renderGames() {
+  if(!db.games) db.games = [];
+  let rows = db.games.map((g, i) => {
+    let assignedRefs = [];
+    if(g.refName) assignedRefs.push(g.refName);
+    if(g.refName2) assignedRefs.push(g.refName2);
+    if(g.refName3) assignedRefs.push(g.refName3);
+    
+    let refDisplay = assignedRefs.length > 0 ? assignedRefs.join(" | ") : "Unbesetzt";
+
+    return `<tr><td><b>${esc(g.pairing)}</b></td><td>${esc(g.date)} · ${esc(g.time)}</td><td><span class="pill off">${esc(g.league)}</span></td><td><b>${esc(refDisplay)}</b></td><td>
+    <button class="btn small primary" onclick="window.assignGameModal(${i})">JSR ansetzen</button>
+    <button class="btn small danger" onclick="window.deleteGame(${i})">✕</button>
+    </td></tr>`;
+  }).join("");
+
+  document.getElementById("games").innerHTML = `<div class="card pad"><h3>Neues Vereinsspiel / Turnier einpflegen</h3>
+  <form class="formgrid" onsubmit="window.addGame(event)">
+    ${inp("pairing", "Begegnung / Turniername *", "z.B. SG Misburg E1 - JSG Nord oder Minis Spielfest", true)}
+    <label>Altersklasse / Jugend * <select name="league" class="select"><option value="Minis / F-Jugend (Turnier)">Minis / F-Jugend Turnier</option><option value="w E-Jugend (Turnier)">w E-Jugend Turnier</option><option value="m E-Jugend (Turnier)">m E-Jugend Turnier</option><option value="w E-Jugend">w E-Jugend (Einzelspiel)</option><option value="m E-Jugend">m E-Jugend (Einzelspiel)</option><option value="w D-Jugend">w D-Jugend</option><option value="m D-Jugend">m D-Jugend</option><option value="NUR INFO: Höhere Jugend (Gesperrt!)">C-Jugend oder höher (Nicht für JSR zugelassen!)</option></select></label>
+    ${inp("date", "Spieldatum *", "", true, "date")}
+    ${inp("time", "Anstoßzeit *", "", true, "time")}
+    <div class="full"><button class="btn primary" style="background:var(--orange)">Spiel im Plan anlegen</button></div>
+  </form></div>
+  <div class="card mt"><h3>Aktueller Jugendspielplan & Ansetzungen</h3>
+  <table class="table"><thead><tr><th>Begegnung / Turnier</th><th>Termin</th><th>Jugendklasse</th><th>Angesetzte(r) JSR</th><th>Aktionen</th></tr></thead><tbody>${rows || '<tr><td colspan="5" style="text-align:center">Keine anstehenden Jugendspiele erfasst.</td></tr>'}</tbody></table></div>`;
+}
+
+window.addGame = async function(ev) {
+  ev.preventDefault();
+  if(!db.games) db.games = [];
+  db.games.push({ ...Object.fromEntries(new FormData(ev.target).entries()), refId: "", refName: "", refId2: "", refName2: "", refId3: "", refName3: "" });
+  await saveDB(); await logAction("Neues Spiel/Turnier im Jugendplan angelegt"); renderAll(); ev.target.reset();
+}
+
+window.assignGameModal = function(gameIndex) {
+  let g = db.games[gameIndex];
+  
+  if(g.league.includes("Gesperrt")) {
+     alert("STOPP! Dieses Spiel gehört zu einer höheren Jugendklasse. Jungschiedsrichter dürfen vereinsintern laut Verband nur Minis, E-Jugend und D-Jugend pfeifen!");
+     return;
+  }
+  
+  // Prüfen, ob es ein Turnier bei Minis/F-Jugend oder E-Jugend ist
+  let isTurnier = g.league.includes("Turnier") && (g.league.includes("Minis") || g.league.includes("E-Jugend"));
+  
+  let availableRefs = db.referees.filter(r => r.status === "Aktiv");
+  
+  let optionsHtml = availableRefs.map(r => `<option value="${r.id}">${esc(refereeName(r))} (Erlaubnis: ${esc(r.class)})</option>`).join("");
+
+  let html = `<h3>Jungschiedsrichter einteilen</h3>
+  <p class="muted">${esc(g.pairing)} (${esc(g.league)})</p>
+  
+  <label style="margin-top:10px; display:block;"><b>1. Jungschiedsrichter</b></label>
+  <select id="selectSR1" class="select"><option value="">— Keiner / Offen lassen —</option>
+  ${availableRefs.map(r => `<option value="${r.id}" ${r.id === g.refId ? 'selected':''}>${esc(refereeName(r))} (Erlaubnis: ${esc(r.class)})</option>`).join("")}
+  </select>
+  
+  <label style="margin-top:10px; display:block;"><b>2. Jungschiedsrichter</b></label>
+  <select id="selectSR2" class="select"><option value="">— Keiner / Offen lassen —</option>
+  ${availableRefs.map(r => `<option value="${r.id}" ${r.id === g.refId2 ? 'selected':''}>${esc(refereeName(r))} (Erlaubnis: ${esc(r.class)})</option>`).join("")}
+  </select>`;
+
+  if (isTurnier) {
+    html += `
+    <label style="margin-top:10px; display:block;"><b>3. Jungschiedsrichter (Turnier-Option aktiv)</b></label>
+    <select id="selectSR3" class="select"><option value="">— Keiner / Offen lassen —</option>
+    ${availableRefs.map(r => `<option value="${r.id}" ${r.id === g.refId3 ? 'selected':''}>${esc(refereeName(r))} (Erlaubnis: ${esc(r.class)})</option>`).join("")}
+    </select>`;
+  }
+
+  html += `<p style="text-align:right; margin-top:20px;"><button class="btn primary" onclick="window.saveGameAssignment(${gameIndex}, ${isTurnier})">Ansetzung bestätigen</button></p>`;
+  
+  window.modalOpen(html);
+}
+
+window.saveGameAssignment = async function(idx, hasThirdRef) {
+  let g = db.games[idx];
+  
+  let id1 = document.getElementById("selectSR1").value;
+  let id2 = document.getElementById("selectSR2").value;
+  
+  if(id1) {
+    let r1 = db.referees.find(x => x.id === id1);
+    g.refId = r1.id; g.refName = refereeName(r1);
+  } else { g.refId = ""; g.refName = ""; }
+
+  if(id2) {
+    let r2 = db.referees.find(x => x.id === id2);
+    g.refId2 = r2.id; g.refName2 = refereeName(r2);
+  } else { g.refId2 = ""; g.refName2 = ""; }
+
+  if(hasThirdRef) {
+    let id3 = document.getElementById("selectSR3").value;
+    if(id3) {
+      let r3 = db.referees.find(x => x.id === id3);
+      g.refId3 = r3.id; g.refName3 = refereeName(r3);
+    } else { g.refId3 = ""; g.refName3 = ""; }
+  } else {
+    g.refId3 = ""; g.refName3 = "";
+  }
+  
+  let logText = `Spiel ${g.pairing} besetzt. JSR: ${g.refName || 'Offen'} ; ${g.refName2 || 'Offen'}`;
+  if(g.refName3) logText += ` ; ${g.refName3}`;
+
+  await saveDB(); await logAction(logText); window.modalClose(); renderAll();
+}
+
+window.deleteGame = async function(idx) {
+  if(confirm("Spiel aus dem Plan entfernen?")) { db.games.splice(idx, 1); await saveDB(); await logAction("Spiel aus Jugendplan entfernt"); renderAll(); }
+}
+
+function renderLogs() {
+  if(!db.logs) db.logs = [];
+  document.getElementById("logs").innerHTML = `<div class="card"><table class="table"><thead><tr><th>Zeitstempel</th><th>Nutzer</th><th>Aktion</th></tr></thead><tbody>${db.logs.map(l => `<tr><td>${esc(l.at)}</td><td>${esc(l.user)}</td><td>${esc(l.text)}</td></tr>`).join("")}</tbody></table></div>`;
+}
+
+function renderAdmin() {
+  if(!db.todos) db.todos = [];
+  let todoRows = db.todos.map((t, i) => `<tr>
+    <td style="width:50px; text-align:center;"><input type="checkbox" ${t.done ? 'checked' : ''} style="width:18px; height:18px; cursor:pointer;" onchange="window.toggleTodo(${i}, this.checked)"></td>
+    <td><span class="${t.done ? 'done-task' : ''}" style="font-weight:600;">${esc(t.task)}</span></td>
+    <td><span class="pill ${t.priority === 'Hoch' ? 'bad' : t.priority === 'Mittel' ? 'orange' : 'off'}">${esc(t.priority)}</span></td>
+    <td style="text-align:right;"><button class="btn small danger" onclick="window.deleteTodo(${i})">🗑️</button></td>
+  </tr>`).join("");
+
+  document.getElementById("admin").innerHTML = `
+<div class="grid grid2">
+  <div class="card pad">
+    <h3>📝 Vereinsinterne Aufgaben</h3>
+    <p class="muted">To-Dos für die Einteilungen und Betreuung bei der SG Misburg.</p>
+    <form onsubmit="window.addTodo(event)" style="display:flex; gap:8px; margin-bottom:15px;">
+      <input id="todoInput" class="input" style="margin:0;" placeholder="z.B. Spesen abrechnen, Pfeifen bestellen..." required>
+      <select id="todoPriority" class="select" style="margin:0; max-width:120px;"><option>Normal</option><option>Mittel</option><option>Hoch</option></select>
+      <button class="btn primary">Hinzufügen</button>
+    </form>
+    <div style="max-height: 280px; overflow-y: auto; border: 1px solid var(--line); border-radius: 8px;">
+      <table class="table" style="margin:0;"><tbody>${todoRows || '<tr><td colspan="4" class="muted" style="text-align:center; padding:15px;">Keine anstehenden Aufgaben.</td></tr>'}</tbody></table>
+    </div>
+  </div>
+
+  <div class="card pad">
+    <h3>👑 Betreuer- / Admin-Zugänge verwalten</h3>
+    <form onsubmit="window.createUser(event)">
+      ${inp("name", "Name des Jugendwarts/Betreuers", "Name")}
+      ${inp("email", "Login E-Mail *", "E-Mail", true, "email")}
+      <label>Passwort vergeben *<input name="password" class="input" required placeholder="Passwort"></label>
+      <label>Systemrolle<select name="role" class="select"><option value="Admin">👑 Admin / Jugendleitung</option><option value="Management">Management / Betreuer</option><option value="Viewer">Viewer (Nur Lesezugriff)</option></select></label>
+      <button class="btn primary" style="width:100%; margin-top:5px; background:var(--orange)">Zugang anlegen</button>
+    </form>
+  </div>
+</div>
+
+<div class="card pad mt">
+  <h3>⚙️ Systemsteuerung (Backup & Reset)</h3>
+  <button class="btn" onclick="window.exportDB()">JSON Backup kopieren</button> <button class="btn danger" onclick="window.resetDB()">Datenbank komplett zurücksetzen</button>
+  <textarea id="dbImport" class="input mt" rows="3" placeholder="JSON Code hier einfügen für Backup-Import..."></textarea>
+  <button class="btn" onclick="window.importDB()">Backup einspielen</button>
+</div>
+
+<div class="card mt">
+  <h3>Betreuerberechtigungen verwalten</h3>
+  <table class="table">
+    <thead><tr><th>Name</th><th>E-Mail</th><th>Rolle / Berechtigung</th><th>Status</th><th>Aktionen</th></tr></thead>
+    <tbody>
+      ${db.users.map((u, i) => {
+        let isMain = u.email.toLowerCase() === "sgmisburgjsr@outlook.de";
+        return `<tr>
+        <td><b>${esc(u.name)}</b></td>
+        <td>${esc(u.email)}</td>
+        <td>
+          <select class="select" style="margin:0; padding:4px 8px; font-weight:bold; width:auto;" onchange="window.updateUserRole(${i}, this.value)" ${isMain ? 'disabled' : ''}>
+            <option value="Admin" ${u.role === 'Admin' ? 'selected' : ''}>👑 Admin</option>
+            <option value="Management" ${u.role === 'Management' ? 'selected' : ''}>Betreuer</option>
+            <option value="Viewer" ${u.role === 'Viewer' ? 'selected' : ''}>Viewer</option>
+          </select>
+        </td>
+        <td><span class="pill ${u.active ? 'ok' : 'bad'}">${u.active ? "Zugelassen" : "Gesperrt"}</span></td>
+        <td>
+          <button class="btn small" onclick="window.toggleUser(${i})" ${isMain ? 'disabled' : ''}>${u.active ? "Sperren" : "Zulassen"}</button> 
+          <button class="btn small" onclick="window.changeUserPasswordPrompt(${i})">Passwort ändern</button>
+        </td>
+      </tr>`}).join("")}
+    </tbody>
+  </table>
+</div>`;
+}
+
+window.addTodo = async function(ev) {
+  ev.preventDefault(); if(!db.todos) db.todos = [];
+  const todoInput = document.getElementById("todoInput");
+  const todoPriority = document.getElementById("todoPriority");
+  db.todos.unshift({ task: todoInput.value.trim(), priority: todoPriority.value, done: false });
+  await saveDB(); await logAction("Interne Aufgabe hinzugefügt: " + todoInput.value.trim()); renderAll();
+}
+
+window.toggleTodo = async function(index, checked) {
+  db.todos[index].done = checked;
+  await saveDB(); await logAction(`Aufgabe ${checked ? 'erledigt' : 'wieder offen'}: ` + db.todos[index].task); renderAll();
+}
+
+window.deleteTodo = async function(index) {
+  db.todos.splice(index, 1); await saveDB(); await logAction("Aufgabe gelöscht"); renderAll();
+}
+
+window.updateUserRole = async function(index, newRole) {
+  let oldRole = db.users[index].role;
+  db.users[index].role = newRole;
+  await saveDB(); await logAction("Rolle für " + db.users[index].email + " geändert von " + oldRole + " zu " + newRole); renderAll();
+}
+
+window.createUser = async function(ev) {
+  ev.preventDefault();
+  let u = Object.fromEntries(new FormData(ev.target).entries());
+  if (db.users.some(x => x.email.toLowerCase() === u.email.toLowerCase())) { alert("Nutzer existiert bereits."); return; }
+  u.active = true; db.users.push(u); await saveDB(); await logAction("Betreuerzugang erstellt: " + u.email); ev.target.reset(); renderAll();
+}
+
+window.changeUserPasswordPrompt = async function(i) {
+  let newPw = prompt("Neues Passwort für " + db.users[i].email + " festlegen:");
+  if(newPw && newPw.trim() !== "") {
+    db.users[i].password = newPw.trim();
+    await saveDB(); await logAction("Passwort geändert für Account: " + db.users[i].email); alert("Passwort geändert!"); renderAll();
+  }
+}
+
+window.toggleUser = async function(i) { 
+  if(db.users[i].email.toLowerCase() === "sgmisburgjsr@outlook.de") return;
+  db.users[i].active = !db.users[i].active; 
+  await saveDB(); await logAction("Zugangsstatus geändert für: " + db.users[i].email); renderAll(); 
+}
+
+window.exportDB = function() { navigator.clipboard.writeText(JSON.stringify(db, null, 2)); alert("Systemdatenbank in Zwischenablage kopiert."); }
+window.importDB = async function() { 
+  try { 
+    db = JSON.parse(document.getElementById("dbImport").value); 
+    await saveDB(); 
+    renderAll(); 
+    alert("Datenbank erfolgreich überschrieben!"); 
+  } catch (e) { 
+    alert("Fehler: Ungültiges JSON-Format"); 
+  } 
+}
+window.resetDB = async function() { if (confirm("Achtung! Alle eingetragenen Jungschiedsrichter, To-Dos und Spiele unwiderruflich löschen?")) { db = JSON.parse(JSON.stringify(seed)); await saveDB(); renderAll(); } }
+
+window.filterTable = function(id, q) { q = q.toLowerCase(); document.querySelectorAll("#" + id + " tbody tr").forEach(r => r.style.display = r.textContent.toLowerCase().includes(q) ? "" : "none") }
+window.modalOpen = function(html) { 
+  const modal = document.getElementById("modal");
+  modal.innerHTML = html; 
+  document.getElementById("modalBg").style.display = "flex"; 
+}
+window.modalClose = function() { document.getElementById("modalBg").style.display = "none"; }
+document.getElementById("modalBg").onclick = e => { if (e.target.id === "modalBg") window.modalClose() }
+</script>
 </body>
 </html>
