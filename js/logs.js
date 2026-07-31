@@ -1,18 +1,26 @@
-// ======================================
+// =====================================
 // SG MISBURG JSR PORTAL
 // SYSTEM LOGS
-// ======================================
+// =====================================
 
 
-import {db} from "./firebase.js";
+import {
+
+db
+
+}
+
+from "./firebase.js";
 
 
 
 import {
 
 collection,
+addDoc,
 getDocs,
-addDoc
+orderBy,
+query
 
 }
 
@@ -26,66 +34,236 @@ from
 
 
 
+const logCollection =
+collection(
+db,
+"logs"
+);
+
+
+
+
+
+
+
+
+// =====================================
+// LOG SPEICHERN
+// =====================================
+
+
+export async function createLog(action){
+
+
+
+try{
+
+
+await addDoc(
+
+logCollection,
+
+{
+
+
+action:action,
+
+
+user:
+
+window.currentUser
+
+?
+
+window.currentUser.name
+
+:
+
+"System",
+
+
+
+role:
+
+window.currentUser
+
+?
+
+window.currentUser.role
+
+:
+
+"System",
+
+
+
+
+date:
+
+new Date()
+.toLocaleString(
+"de-DE"
+),
+
+
+
+timestamp:
+
+Date.now()
+
+
+}
+
+);
+
+
+
+}
+
+catch(error){
+
+
+console.error(
+"Log Fehler:",
+error
+);
+
+
+
+}
+
+
+
+}
+
+
+
+
+
+
+
+
+
+// =====================================
+// LOGS LADEN
+// =====================================
+
+
 export async function loadLogs(){
 
 
 
-const list =
+const box =
 document.getElementById(
 "logList"
 );
 
 
 
-if(!list)
+if(!box)
 return;
 
 
 
+box.innerHTML =
+"⏳ Lade System Logs...";
 
-const snapshot =
-await getDocs(
 
-collection(
-db,
-"logs"
+
+
+
+try{
+
+
+
+const logsQuery =
+query(
+
+logCollection,
+
+orderBy(
+"timestamp",
+"desc"
 )
 
 );
 
 
 
+const snapshot =
+await getDocs(
+logsQuery
+);
 
 
-list.innerHTML="";
+
+box.innerHTML="";
+
+
+
+if(snapshot.empty){
+
+
+
+box.innerHTML = `
+
+<div class="empty">
+
+Keine Systemaktionen vorhanden.
+
+</div>
+
+`;
+
+return;
+
+
+}
+
+
+
 
 
 
 
 snapshot.forEach(
+(item)=>{
 
-(log)=>{
 
-
-const l =
-log.data();
-
+const log =
+item.data();
 
 
 
-list.innerHTML += `
+box.innerHTML += `
 
 
-<div class="card">
+
+<div class="log-card">
+
+
+<div class="log-icon">
+
+📋
+
+</div>
+
+
+
+<div>
+
+
+<h3>
+
+${log.action}
+
+</h3>
+
 
 
 <p>
 
-<b>
-
-${l.action || "Aktion"}
-
-</b>
+👤 ${log.user}
 
 </p>
 
@@ -93,12 +271,25 @@ ${l.action || "Aktion"}
 
 <p>
 
-${l.date || ""}
+🔐 ${log.role}
 
 </p>
+
+
+
+<span>
+
+🕒 ${log.date}
+
+</span>
 
 
 </div>
+
+
+
+</div>
+
 
 
 `;
@@ -113,41 +304,40 @@ ${l.date || ""}
 
 
 
+catch(error){
 
 
 
-
-
-
-
-export async function createLog(text){
-
-
-
-await addDoc(
-
-collection(
-db,
-"logs"
-),
-
-{
-
-
-action:text,
-
-
-date:
-new Date()
-.toLocaleString(
-"de-DE"
-)
-
-
-
-}
-
+console.error(
+"Logs Fehler:",
+error
 );
 
 
+
+box.innerHTML =
+"Fehler beim Laden der Logs";
+
+
 }
+
+
+
+}
+
+
+
+
+
+
+
+
+
+
+// =====================================
+// LOG BUTTON GLOBAL
+// =====================================
+
+
+window.addSystemLog =
+createLog;

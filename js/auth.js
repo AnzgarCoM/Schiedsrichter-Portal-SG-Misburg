@@ -1,15 +1,13 @@
-// ======================================
+// =====================================
 // SG MISBURG JSR PORTAL
-// LOGIN SYSTEM
-// ======================================
+// AUTHENTICATION
+// =====================================
 
 
 import {
-
-auth
-
+    auth,
+    db
 }
-
 from "./firebase.js";
 
 
@@ -17,9 +15,7 @@ from "./firebase.js";
 import {
 
 signInWithEmailAndPassword,
-
 signOut,
-
 onAuthStateChanged
 
 }
@@ -30,43 +26,95 @@ from
 
 
 
+import {
+
+doc,
+getDoc
+
+}
+
+from
+
+"https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 
-const loginBtn =
+
+
+
+
+// =====================================
+// LOGIN
+// =====================================
+
+
+const loginButton =
 document.getElementById(
 "loginBtn"
 );
 
 
 
+if(loginButton){
 
-loginBtn.onclick =
-async ()=>{
+
+loginButton.addEventListener(
+"click",
+loginUser
+);
+
+
+}
+
+
+
+
+
+
+
+
+async function loginUser(){
+
 
 
 const email =
 document
-.getElementById("email")
-.value;
+.getElementById(
+"email"
+)
+.value
+.trim();
 
 
 
 const password =
 document
-.getElementById("password")
+.getElementById(
+"password"
+)
 .value;
 
 
 
 const error =
 document
-.getElementById("loginError");
+.getElementById(
+"loginError"
+);
+
+
+
+
+error.innerHTML =
+"";
+
 
 
 
 try{
 
 
+
+const result =
 await signInWithEmailAndPassword(
 
 auth,
@@ -79,69 +127,165 @@ password
 
 
 
-error.innerHTML="";
+const user =
+result.user;
+
+
+
+console.log(
+"Login:",
+user.email
+);
+
+
+
+loadUserData(
+user.uid
+);
+
 
 
 
 }
 
-catch(e){
+catch(error){
 
 
-console.log(e);
+
+console.error(error);
+
 
 
 error.innerHTML =
 "❌ Login fehlgeschlagen";
 
 
+
 }
 
 
+
+}
+
+
+
+
+
+
+
+
+// =====================================
+// USER DATEN LADEN
+// =====================================
+
+
+async function loadUserData(uid){
+
+
+
+try{
+
+
+
+const userRef =
+doc(
+db,
+"users",
+uid
+);
+
+
+
+const snapshot =
+await getDoc(
+userRef
+);
+
+
+
+
+if(
+snapshot.exists()
+){
+
+
+
+const data =
+snapshot.data();
+
+
+
+window.currentUser =
+{
+
+uid:uid,
+
+...data
 
 };
 
 
 
 
+startPortal();
+
+
+
+}
+
+else{
+
+
+
+alert(
+"Benutzerprofil wurde nicht gefunden."
+);
+
+
+
+}
+
+
+
+}
+
+catch(error){
+
+
+console.error(
+"User Fehler:",
+error
+);
+
+
+}
+
+
+
+
+}
 
 
 
 
 
-onAuthStateChanged(
-
-auth,
-
-(user)=>{
 
 
 
-const loginPage =
-document.getElementById(
+// =====================================
+// PORTAL STARTEN
+// =====================================
+
+
+function startPortal(){
+
+
+
+document
+.getElementById(
 "loginPage"
-);
-
-
-
-const app =
-document.getElementById(
-"app"
-);
-
-
-
-if(user){
-
-
-
-loginPage.classList.add(
-"hidden"
-);
-
-
-
-app.classList.remove(
+)
+.classList.add(
 "hidden"
 );
 
@@ -149,31 +293,87 @@ app.classList.remove(
 
 document
 .getElementById(
-"username"
+"app"
 )
-.innerHTML =
-user.email;
+.classList.remove(
+"hidden"
+);
+
+
+
+
+
+const username =
+document.getElementById(
+"username"
+);
+
+
+
+if(username){
+
+
+
+username.innerHTML =
+
+`
+
+${currentUser.name}
+
+<br>
+
+<small>
+${currentUser.role}
+</small>
+
+`;
 
 
 
 }
 
 
-else{
 
 
-app.classList.add(
-"hidden"
-);
+// Script starten
 
+if(window.initPortal){
 
-loginPage.classList.remove(
-"hidden"
-);
+window.initPortal();
+
+}
+
 
 
 }
 
+
+
+
+
+
+
+
+// =====================================
+// LOGIN STATUS BEIM LADEN
+// =====================================
+
+
+onAuthStateChanged(
+auth,
+(user)=>{
+
+
+if(user){
+
+
+loadUserData(
+user.uid
+);
+
+
+
+}
 
 
 });
@@ -185,15 +385,98 @@ loginPage.classList.remove(
 
 
 
-document
-.getElementById(
+
+// =====================================
+// LOGOUT
+// =====================================
+
+
+const logoutButton =
+document.getElementById(
 "logout"
-)
-.onclick =
-()=>{
+);
 
 
-signOut(auth);
+
+if(logoutButton){
+
+
+logoutButton.addEventListener(
+
+"click",
+
+async()=>{
+
+
+await signOut(auth);
+
+
+
+window.location.reload();
+
+
+
+}
+
+
+);
+
+
+}
+
+
+
+
+
+
+
+// =====================================
+// RECHTE SYSTEM
+// =====================================
+
+
+
+window.hasPermission =
+function(level){
+
+
+
+if(!window.currentUser)
+
+return false;
+
+
+
+
+const role =
+window.currentUser.role;
+
+
+
+
+if(role==="Admin")
+
+return true;
+
+
+
+
+if(role==="Management" && level!=="Admin")
+
+return true;
+
+
+
+
+if(role==="Viewer" && level==="View")
+
+return true;
+
+
+
+
+return false;
+
 
 
 };

@@ -1,24 +1,23 @@
-// ======================================
+// =====================================
 // SG MISBURG JSR PORTAL
 // SPIELE & ANSETZUNGEN
-// ======================================
+// =====================================
 
 
-import {db} from "./firebase.js";
-
+import {
+    db
+}
+from "./firebase.js";
 
 
 import {
 
 collection,
-
 addDoc,
-
 getDocs,
-
+doc,
 deleteDoc,
-
-doc
+updateDoc
 
 }
 
@@ -30,8 +29,7 @@ from
 
 
 
-
-const games =
+const gameCollection =
 collection(
 db,
 "games"
@@ -43,6 +41,9 @@ db,
 
 
 
+// =====================================
+// SPIELE LADEN
+// =====================================
 
 
 export async function loadGames(){
@@ -66,10 +67,13 @@ list.innerHTML =
 
 
 
+try{
+
+
 
 const snapshot =
 await getDocs(
-games
+gameCollection
 );
 
 
@@ -78,66 +82,144 @@ list.innerHTML="";
 
 
 
+let count = 0;
+
+
 
 snapshot.forEach(
-
 (game)=>{
+
+
+count++;
 
 
 const g =
 game.data();
 
 
+const id =
+game.id;
+
 
 
 list.innerHTML += `
 
 
-<div class="card">
+<div class="game-card">
+
+
+<div class="game-header">
 
 
 <h3>
 
-${g.name}
+${g.match}
 
 </h3>
 
 
+<span class="badge">
+
+${g.age}
+
+</span>
+
+
+</div>
+
+
+
 
 <p>
-
 📅 ${g.date}
-
 </p>
-
 
 
 <p>
-
-🏆 ${g.class}
-
+⏰ ${g.time}
 </p>
-
 
 
 <p>
-
-🧑‍⚖️ Schiedsrichter:
-
-${g.referee || "Offen"}
-
+🏟️ ${g.hall || "-"}
 </p>
 
+
+
+
+<div class="refs">
+
+
+<b>
+Angesetzte JSR:
+</b>
+
+
+<br>
+
+
+${
+
+g.referees?.length
+
+?
+
+g.referees.join("<br>")
+
+:
+
+"Keine Ansetzung"
+
+}
+
+
+</div>
+
+
+
+
+<div class="actions">
 
 
 
 <button
+class="primary"
 
-onclick="deleteGame('${game.id}')">
+onclick="assignReferee('${id}')">
 
-Löschen
+🧑‍⚖️ Ansetzen
 
 </button>
+
+
+
+
+
+${
+window.checkAdmin()
+
+?
+
+`
+
+<button
+class="danger"
+
+onclick="deleteGame('${id}')">
+
+🗑 Löschen
+
+</button>
+
+`
+
+:""
+
+}
+
+
+
+</div>
 
 
 
@@ -152,50 +234,61 @@ Löschen
 
 
 
+
+window.gameCount =
+count;
+
+
+
+
+if(window.updateDashboard)
+
+window.updateDashboard();
+
+
+
+
+if(count===0){
+
+
+
+list.innerHTML =
+`
+
+<div class="empty">
+
+Keine Spiele vorhanden.
+
+</div>
+
+`;
+
+
+
 }
 
 
 
+}
+
+catch(error){
 
 
-
-
-
-
-
-
-
-// ======================================
-// SPIEL HINZUFÜGEN
-// ======================================
-
-
-document
-.addEventListener(
-
-"DOMContentLoaded",
-
-()=>{
-
-
-const btn =
-document.getElementById(
-"newGame"
+console.error(
+error
 );
 
 
 
-if(btn){
-
-
-btn.onclick =
-addGame;
+list.innerHTML =
+"Fehler beim Laden";
 
 
 }
 
 
-});
+
+}
 
 
 
@@ -205,13 +298,199 @@ addGame;
 
 
 
-async function addGame(){
+// =====================================
+// SPIEL ERSTELLEN
+// =====================================
+
+
+export async function createGame(data){
+
+
+
+await addDoc(
+
+gameCollection,
+
+{
+
+
+match:data.match,
+
+
+date:data.date,
+
+
+time:data.time,
+
+
+hall:data.hall || "",
+
+
+age:data.age,
+
+
+referees:[],
+
+
+created:
+new Date()
+
+
+}
+
+);
+
+
+
+loadGames();
+
+
+}
+
+
+
+
+
+
+
+
+
+// =====================================
+// SPIEL LÖSCHEN
+// =====================================
+
+
+window.deleteGame =
+async function(id){
+
+
+
+if(
+!confirm(
+"Spiel wirklich löschen?"
+)
+
+)
+
+return;
+
+
+
+await deleteDoc(
+
+doc(
+db,
+"games",
+id
+
+)
+
+);
+
+
+
+loadGames();
+
+
+
+};
+
+
+
+
+
+
+
+
+
+
+
+// =====================================
+// JSR ANSETZEN
+// =====================================
+
+
+window.assignReferee =
+async function(id){
 
 
 
 const name =
 prompt(
-"Spiel / Turnier:"
+"Name des JSR eintragen:"
+);
+
+
+
+if(!name)
+return;
+
+
+
+
+await updateDoc(
+
+doc(
+db,
+"games",
+id
+),
+
+
+{
+
+
+referees:[name]
+
+
+}
+
+
+
+);
+
+
+
+loadGames();
+
+
+
+};
+
+
+
+
+
+
+
+
+
+
+
+// =====================================
+// NEUES SPIEL BUTTON
+// =====================================
+
+
+const button =
+document.querySelector(
+"#newGame"
+);
+
+
+
+if(button){
+
+
+
+button.onclick =
+()=>{
+
+
+
+const match =
+prompt(
+"Begegnung:"
 );
 
 
@@ -223,7 +502,14 @@ prompt(
 
 
 
-const klasse =
+const time =
+prompt(
+"Uhrzeit:"
+);
+
+
+
+const age =
 prompt(
 "Altersklasse:"
 );
@@ -231,107 +517,20 @@ prompt(
 
 
 
+createGame({
 
-if(!name)
-return;
-
-
-
-
-
-
-await addDoc(
-
-games,
-
-{
-
-
-name,
-
-
+match,
 date,
+time,
+age
 
 
-class:klasse,
+});
 
-
-referee:"Offen",
-
-
-created:
-new Date()
-
-
-}
-
-
-);
-
-
-
-
-alert(
-"Spiel gespeichert"
-);
-
-
-
-loadGames();
-
-
-}
-
-
-
-
-
-
-
-
-
-
-
-
-// ======================================
-// SPIEL LÖSCHEN
-// ======================================
-
-
-window.deleteGame =
-async function(id){
-
-
-
-if(
-!confirm(
-"Spiel löschen?"
-)
-
-)
-return;
-
-
-
-
-await deleteDoc(
-
-doc(
-
-db,
-
-"games",
-
-id
-
-)
-
-);
-
-
-
-
-loadGames();
 
 
 };
+
+
+
+}

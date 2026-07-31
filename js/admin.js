@@ -1,18 +1,27 @@
-// ======================================
+// =====================================
 // SG MISBURG JSR PORTAL
-// ADMIN SYSTEM
-// ======================================
+// ADMIN BEREICH
+// =====================================
 
 
+import {
 
-import {db} from "./firebase.js";
+db
+
+}
+
+from "./firebase.js";
 
 
 
 import {
 
 collection,
-getDocs
+addDoc,
+getDocs,
+deleteDoc,
+doc,
+updateDoc
 
 }
 
@@ -24,144 +33,490 @@ from
 
 
 
-
-
-
-export async function loadDashboard(){
-
-
-
-const refs =
-await getDocs(
+const todoCollection =
 collection(
 db,
-"referees"
-)
-);
-
-
-
-const games =
-await getDocs(
-collection(
-db,
-"games"
-)
-);
-
-
-
-const users =
-await getDocs(
-collection(
-db,
-"users"
-)
+"todos"
 );
 
 
 
 
 
-document
-.getElementById(
-"countRefs"
-)
-.innerHTML =
-refs.size;
 
 
 
+// =====================================
+// ADMIN LADEN
+// =====================================
 
-document
-.getElementById(
-"countGames"
-)
-.innerHTML =
-games.size;
 
+export async function loadAdmin(){
 
 
 
-document
-.getElementById(
-"countUsers"
-)
-.innerHTML =
-users.size;
-
-
-
-}
-
-
-
-
-
-
-
-
-
-
-
-// Backup
-
-
-document
-.addEventListener(
-
-"DOMContentLoaded",
-
-()=>{
-
-
-const btn =
+const box =
 document.getElementById(
-"backupBtn"
+"admin"
 );
 
 
 
-if(btn){
+if(!box)
+return;
 
 
-btn.onclick =
-createBackup;
+
+if(
+!window.checkAdmin()
+){
+
+
+
+box.innerHTML = `
+
+<div class="empty">
+
+⛔ Keine Berechtigung für diesen Bereich.
+
+</div>
+
+`;
+
+return;
 
 
 }
 
+
+
+
+box.innerHTML = `
+
+
+<div class="admin-grid">
+
+
+<div class="admin-card">
+
+
+<h2>
+📝 Vereins Aufgaben
+</h2>
+
+
+<div id="todoList">
+
+Lade Aufgaben...
+
+</div>
+
+
+<button
+class="primary"
+id="addTodo">
+
++ Aufgabe erstellen
+
+</button>
+
+
+
+</div>
+
+
+
+
+
+<div class="admin-card">
+
+
+<h2>
+💾 Datenverwaltung
+</h2>
+
+
+
+<button
+class="primary"
+onclick="createBackup()">
+
+Backup erstellen
+
+</button>
+
+
+
+<button
+onclick="location.reload()">
+
+System neu laden
+
+</button>
+
+
+
+</div>
+
+
+
+</div>
+
+
+
+`;
+
+
+
+
+loadTodos();
+
+
+
+const addButton =
+document.getElementById(
+"addTodo"
+);
+
+
+
+if(addButton){
+
+
+
+addButton.onclick =
+createTodo;
+
+
+
+}
+
+
+
+}
+
+
+
+
+
+
+
+
+
+// =====================================
+// TODO LADEN
+// =====================================
+
+
+async function loadTodos(){
+
+
+
+const list =
+document.getElementById(
+"todoList"
+);
+
+
+
+if(!list)
+return;
+
+
+
+list.innerHTML =
+"";
+
+
+
+const snapshot =
+await getDocs(
+todoCollection
+);
+
+
+
+if(snapshot.empty){
+
+
+list.innerHTML =
+`
+
+<p>
+Keine Aufgaben vorhanden.
+</p>
+
+`;
+
+return;
+
+
+}
+
+
+
+
+snapshot.forEach(
+(item)=>{
+
+
+const todo =
+item.data();
+
+
+
+list.innerHTML += `
+
+
+<div class="todo-card">
+
+
+<h3>
+
+${todo.title}
+
+</h3>
+
+
+
+<p>
+
+${todo.description || ""}
+
+</p>
+
+
+
+<span>
+
+Status:
+${todo.done ? "Erledigt":"Offen"}
+
+</span>
+
+
+
+<br>
+
+
+
+<button
+onclick="finishTodo('${item.id}')">
+
+✔ Erledigt
+
+</button>
+
+
+
+<button
+class="danger"
+
+onclick="removeTodo('${item.id}')">
+
+🗑 Löschen
+
+</button>
+
+
+</div>
+
+
+
+`;
 
 
 });
 
 
 
+}
 
 
 
 
 
-async function createBackup(){
 
 
 
-const data = {};
+
+// =====================================
+// TODO ERSTELLEN
+// =====================================
+
+
+async function createTodo(){
+
+
+
+const title =
+prompt(
+"Aufgabe:"
+);
+
+
+
+if(!title)
+return;
+
+
+
+await addDoc(
+
+todoCollection,
+
+{
+
+
+title:title,
+
+
+description:"",
+
+
+done:false,
+
+
+created:
+new Date()
+
+
+}
+
+);
+
+
+
+loadTodos();
+
+
+
+}
+
+
+
+
+
+
+
+
+
+// =====================================
+// TODO ERLEDIGEN
+// =====================================
+
+
+window.finishTodo =
+async function(id){
+
+
+
+await updateDoc(
+
+doc(
+db,
+"todos",
+id
+
+),
+
+{
+
+
+done:true
+
+
+}
+
+);
+
+
+
+loadTodos();
+
+
+
+};
+
+
+
+
+
+
+
+
+
+// =====================================
+// TODO LÖSCHEN
+// =====================================
+
+
+window.removeTodo =
+async function(id){
+
+
+
+if(
+!confirm(
+"Aufgabe löschen?"
+)
+
+)
+return;
+
+
+
+
+await deleteDoc(
+
+doc(
+db,
+"todos",
+id
+
+)
+
+);
+
+
+
+loadTodos();
+
+
+
+};
+
+
+
+
+
+
+
+
+
+// =====================================
+// BACKUP
+// =====================================
+
+
+window.createBackup =
+async function(){
 
 
 
 const collections=[
 
-"referees",
-
-"games",
-
 "users",
-
+"referees",
+"games",
+"todos",
 "logs"
 
 ];
 
+
+
+let backup={};
 
 
 
@@ -178,25 +533,29 @@ await getDocs(
 collection(
 db,
 name
+
 )
 
 );
 
 
 
-data[name]=[];
-
+backup[name]=[];
 
 
 
 snap.forEach(
-
 doc=>{
 
 
-data[name].push(
+backup[name].push(
+{
 
-doc.data()
+id:doc.id,
+
+...doc.data()
+
+}
 
 );
 
@@ -211,24 +570,28 @@ doc.data()
 
 
 
-
-navigator.clipboard.writeText(
-
+const json =
 JSON.stringify(
-data,
+backup,
 null,
 2
-)
-
 );
 
+
+
+
+navigator
+.clipboard
+.writeText(
+json
+);
 
 
 
 alert(
-"Backup kopiert"
+"Backup wurde kopiert."
 );
 
 
 
-}
+};

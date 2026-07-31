@@ -19,23 +19,21 @@ SG Misburg | Jungschiedsrichter Portal
 </head>
 
 
+
 <body>
 
 
-<!-- ==========================
+
+<!-- =====================================
 INTRO
-========================== -->
+===================================== -->
 
 
 <div id="intro">
 
 
-<div class="intro-box">
-
-
 <img 
 src="assets/sg-misburg.jpeg"
-class="intro-logo"
 alt="SG Misburg Logo">
 
 
@@ -49,11 +47,8 @@ Jungschiedsrichter Portal
 </h2>
 
 
-<div class="loader">
 
-<div class="loader-bar"></div>
-
-</div>
+<div class="progress"></div>
 
 
 
@@ -67,19 +62,14 @@ Intro überspringen
 </div>
 
 
-</div>
 
 
 
 
 
-
-
-
-
-<!-- ==========================
+<!-- =====================================
 LOGIN
-========================== -->
+===================================== -->
 
 
 <div id="loginPage">
@@ -88,7 +78,8 @@ LOGIN
 <div class="login-card">
 
 
-<img
+
+<img 
 src="assets/sg-misburg.jpeg"
 class="login-logo">
 
@@ -100,22 +91,29 @@ SG Misburg
 
 
 <p>
-Vereinsinterne Jungschiedsrichter Verwaltung
+Interne Jungschiedsrichter Verwaltung
 </p>
 
 
 
+
 <input
+
 id="email"
+
 class="input"
+
 placeholder="E-Mail">
 
 
-
 <input
+
 id="password"
+
 class="input"
+
 type="password"
+
 placeholder="Passwort">
 
 
@@ -123,7 +121,9 @@ placeholder="Passwort">
 
 
 <button
+
 id="loginBtn"
+
 class="primary">
 
 Einloggen
@@ -132,7 +132,12 @@ Einloggen
 
 
 
-<p id="loginError"></p>
+<p
+
+id="loginError">
+
+</p>
+
 
 
 </div>
@@ -148,9 +153,9 @@ Einloggen
 
 
 
-<!-- ==========================
-APP
-========================== -->
+<!-- =====================================
+HAUPTAPP
+===================================== -->
 
 
 <div id="app" class="hidden">
@@ -158,6 +163,9 @@ APP
 
 
 
+
+
+<!-- SIDEBAR -->
 
 
 <aside class="sidebar">
@@ -170,17 +178,21 @@ APP
 <img src="assets/sg-misburg.jpeg">
 
 
+
 <div>
 
 <b>
 SG Misburg
 </b>
 
+
 <br>
+
 
 <span>
 JSR Portal
 </span>
+
 
 </div>
 
@@ -200,11 +212,14 @@ JSR Portal
 </button>
 
 
+
 <button data-page="dashboard">
 
 📊 Dashboard
 
 </button>
+
+
 
 
 <button data-page="referees">
@@ -215,11 +230,13 @@ JSR Portal
 
 
 
+
 <button data-page="games">
 
-📅 Spiele
+📅 Spiele & Ansetzungen
 
 </button>
+
 
 
 
@@ -231,11 +248,23 @@ JSR Portal
 
 
 
+
 <button data-page="admin">
 
 ⚙️ Administration
 
 </button>
+
+
+
+
+<button data-page="logs">
+
+📋 System Logs
+
+</button>
+
+
 
 
 
@@ -249,11 +278,15 @@ JSR Portal
 
 
 
+<!-- HAUPTBEREICH -->
+
+
 <main>
 
 
 
 <header>
+
 
 
 <h2 id="pageTitle">
@@ -264,7 +297,8 @@ Startseite
 
 
 
-<div>
+
+<div class="profile">
 
 
 <span id="username">
@@ -272,11 +306,13 @@ Startseite
 </span>
 
 
+
 <button id="logout">
 
 Logout
 
 </button>
+
 
 
 </div>
@@ -294,8 +330,15 @@ Logout
 
 
 
+<!-- STARTSEITE -->
 
-<section id="home" class="page">
+
+<section
+
+id="home"
+
+class="page">
+
 
 
 <div class="hero">
@@ -317,12 +360,13 @@ JSR Portal
 
 <p>
 
-Die interne Verwaltungsplattform der Jungschiedsrichter der SG Misburg.
+Organisation und Verwaltung der Jungschiedsrichter der SG Misburg.
 
 </p>
 
 
 </div>
+
 
 
 </section>
@@ -335,62 +379,92 @@ Die interne Verwaltungsplattform der Jungschiedsrichter der SG Misburg.
 
 
 
-<section id="dashboard" class="page hidden">
 
 
-<h2>
-Dashboard
-</h2>
+<!-- DASHBOARD -->
+
+
+<section
+
+id="dashboard"
+
+class="page hidden">
+
 
 
 <div class="stats">
 
 
+
 <div class="card">
+
 
 <h2 id="countRefs">
+
 0
+
 </h2>
 
+
 <p>
+
 Jungschiedsrichter
+
 </p>
+
 
 </div>
 
 
 
 
+
 <div class="card">
+
 
 <h2 id="countGames">
+
 0
+
 </h2>
 
+
 <p>
+
 Spiele
+
 </p>
 
+
 </div>
+
 
 
 
 
 <div class="card">
 
+
 <h2 id="countUsers">
+
 0
+
 </h2>
 
+
 <p>
+
 Benutzer
+
 </p>
 
-</div>
-
-
 
 </div>
+
+
+
+</div>
+
 
 
 </section>
@@ -403,17 +477,27 @@ Benutzer
 
 
 
-<section id="referees" class="page hidden">
+<!-- JSR -->
+
+
+<section
+
+id="referees"
+
+class="page hidden">
 
 
 <h2>
-🧑‍⚖️ JSR-Kartei
+JSR-Kartei
 </h2>
 
 
 
-<button id="newRef"
-class="primary">
+<button
+
+class="primary"
+
+id="newRef">
 
 + Neuer JSR
 
@@ -437,20 +521,34 @@ class="primary">
 
 
 
-<section id="games" class="page hidden">
+<!-- SPIELE -->
+
+
+<section
+
+id="games"
+
+class="page hidden">
 
 
 <h2>
-📅 Spiele & Ansetzungen
+
+Spiele & Ansetzungen
+
 </h2>
 
 
-<button id="newGame"
-class="primary">
 
-+ Spiel hinzufügen
+<button
+
+class="primary"
+
+id="newGame">
+
++ Neues Spiel
 
 </button>
+
 
 
 <div id="gameList">
@@ -458,6 +556,7 @@ class="primary">
 </div>
 
 
+
 </section>
 
 
@@ -468,12 +567,22 @@ class="primary">
 
 
 
-<section id="users" class="page hidden">
+<!-- BENUTZER -->
+
+
+<section
+
+id="users"
+
+class="page hidden">
 
 
 <h2>
-👥 Benutzerverwaltung
+
+Benutzerverwaltung
+
 </h2>
+
 
 
 <div id="userList">
@@ -481,6 +590,7 @@ class="primary">
 </div>
 
 
+
 </section>
 
 
@@ -491,32 +601,63 @@ class="primary">
 
 
 
-<section id="admin" class="page hidden">
+
+
+<!-- ADMIN -->
+
+
+<section
+
+id="admin"
+
+class="page hidden">
 
 
 <h2>
-⚙️ Administration
+
+Administration
+
 </h2>
 
 
 
-<button id="backupBtn">
-
-Backup erstellen
-
-</button>
+</section>
 
 
 
-<button id="logsBtn">
+
+
+
+
+
+
+<!-- LOGS -->
+
+
+<section
+
+id="logs"
+
+class="page hidden">
+
+
+<h2>
 
 System Logs
 
-</button>
+</h2>
+
+
+
+<div id="logList">
+
+</div>
 
 
 
 </section>
+
+
 
 
 
@@ -526,6 +667,7 @@ System Logs
 
 
 
+
 </div>
 
 
@@ -535,22 +677,31 @@ System Logs
 
 
 
+<!-- =====================================
+JAVASCRIPT MODULE
+===================================== -->
 
-<!-- MODULE -->
 
 <script type="module" src="js/firebase.js"></script>
 
+
 <script type="module" src="js/auth.js"></script>
+
 
 <script type="module" src="js/referees.js"></script>
 
+
 <script type="module" src="js/games.js"></script>
+
 
 <script type="module" src="js/users.js"></script>
 
+
 <script type="module" src="js/admin.js"></script>
 
+
 <script type="module" src="js/logs.js"></script>
+
 
 <script type="module" src="js/script.js"></script>
 

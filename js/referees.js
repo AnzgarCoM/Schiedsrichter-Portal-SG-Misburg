@@ -1,10 +1,17 @@
-// ======================================
+// =====================================
 // SG MISBURG JSR PORTAL
 // JSR KARTEI
-// ======================================
+// =====================================
 
 
-import {db} from "./firebase.js";
+import {
+
+db
+
+}
+
+from "./firebase.js";
+
 
 
 import {
@@ -14,7 +21,8 @@ addDoc,
 getDocs,
 doc,
 deleteDoc,
-updateDoc
+updateDoc,
+getDoc
 
 }
 
@@ -24,6 +32,11 @@ from
 
 
 
+
+
+// =====================================
+// COLLECTION
+// =====================================
 
 
 const refereeCollection =
@@ -39,12 +52,13 @@ db,
 
 
 
-// ======================================
+// =====================================
 // JSR LADEN
-// ======================================
+// =====================================
 
 
 export async function loadReferees(){
+
 
 
 const list =
@@ -60,8 +74,16 @@ return;
 
 
 list.innerHTML =
-"⏳ Lade Jungschiedsrichter...";
+`
+<div class="loading">
+⏳ Lade Jungschiedsrichter...
+</div>
+`;
 
+
+
+
+try{
 
 
 
@@ -76,9 +98,18 @@ list.innerHTML="";
 
 
 
+let count = 0;
+
+
+
 
 snapshot.forEach(
 (item)=>{
+
+
+
+count++;
+
 
 
 const r =
@@ -86,12 +117,30 @@ item.data();
 
 
 
+const id =
+item.id;
+
+
 
 list.innerHTML += `
 
 
-<div class="card">
 
+<div class="ref-card">
+
+
+<div class="ref-header">
+
+
+<div class="avatar">
+
+${r.firstname?.charAt(0)}
+${r.lastname?.charAt(0)}
+
+</div>
+
+
+<div>
 
 <h3>
 
@@ -99,6 +148,24 @@ ${r.firstname}
 ${r.lastname}
 
 </h3>
+
+
+<span class="status ${r.status}">
+
+${r.status}
+
+</span>
+
+
+</div>
+
+
+</div>
+
+
+
+
+<div class="ref-info">
 
 
 <p>
@@ -111,56 +178,75 @@ ${r.lastname}
 </p>
 
 
-
 <p>
-
-🧑‍⚖️ Klasse:
-${r.level}
-
+🧑‍⚖️ ${r.level}
 </p>
 
 
-
 <p>
-
-Status:
-<b>
-${r.status}
-</b>
-
+🏠 SG Misburg
 </p>
-
-
-
-<button 
-onclick="editReferee('${item.id}')">
-
-Bearbeiten
-
-</button>
-
-
-
-<button
-
-onclick="removeReferee('${item.id}')">
-
-Löschen
-
-</button>
-
-
-
-<button
-
-onclick="createPass('${item.id}')">
-
-📄 Digitaler Pass
-
-</button>
 
 
 </div>
+
+
+
+
+<div class="actions">
+
+
+<button 
+class="primary"
+onclick="createPass('${id}')">
+
+📄 Pass
+
+</button>
+
+
+
+
+<button
+onclick="editReferee('${id}')">
+
+✏️ Bearbeiten
+
+</button>
+
+
+
+${
+window.checkAdmin()
+
+?
+
+`
+
+<button
+class="danger"
+onclick="removeReferee('${id}')">
+
+🗑 Löschen
+
+</button>
+
+`
+
+:
+
+""
+
+}
+
+
+
+
+</div>
+
+
+</div>
+
 
 
 `;
@@ -170,6 +256,67 @@ onclick="createPass('${item.id}')">
 });
 
 
+
+
+
+window.refereeCount =
+count;
+
+
+
+if(window.updateDashboard)
+
+window.updateDashboard();
+
+
+
+if(count===0){
+
+
+
+list.innerHTML=
+
+`
+
+<div class="empty">
+
+Noch keine Jungschiedsrichter eingetragen.
+
+</div>
+
+`;
+
+
+
+}
+
+
+
+
+}
+
+catch(error){
+
+
+console.error(
+"JSR Fehler:",
+error
+);
+
+
+
+list.innerHTML=
+
+`
+Fehler beim Laden.
+`;
+
+
+
+}
+
+
+
 }
 
 
@@ -181,49 +328,286 @@ onclick="createPass('${item.id}')">
 
 
 
-
-
-// ======================================
+// =====================================
 // JSR ERSTELLEN
-// ======================================
+// =====================================
 
 
-document
-.addEventListener(
-
-"DOMContentLoaded",
-
-()=>{
+export async function createReferee(data){
 
 
-const button =
+
+await addDoc(
+
+refereeCollection,
+
+{
+
+
+firstname:data.firstname,
+
+lastname:data.lastname,
+
+
+birthday:data.birthday || "",
+
+
+email:data.email,
+
+
+phone:data.phone || "",
+
+
+club:"SG Misburg",
+
+
+level:data.level,
+
+
+allowedClasses:data.allowedClasses || [],
+
+
+status:"Aktiv",
+
+
+created:
+new Date()
+
+
+}
+
+);
+
+
+
+loadReferees();
+
+
+
+}
+
+
+
+
+
+
+
+
+
+// =====================================
+// JSR LÖSCHEN
+// =====================================
+
+
+window.removeReferee = async function(id){
+
+
+
+if(
+!confirm(
+"Jungschiedsrichter wirklich löschen?"
+)
+
+)
+return;
+
+
+
+
+await deleteDoc(
+
+doc(
+db,
+"referees",
+id
+
+)
+
+);
+
+
+
+loadReferees();
+
+
+
+};
+
+
+
+
+
+
+
+
+
+
+
+// =====================================
+// JSR BEARBEITEN
+// =====================================
+
+
+window.editReferee =
+async function(id){
+
+
+
+const ref =
+doc(
+db,
+"referees",
+id
+);
+
+
+
+const snap =
+await getDoc(
+ref
+);
+
+
+
+const data =
+snap.data();
+
+
+
+
+const status =
+prompt(
+"Neuer Status:",
+data.status
+);
+
+
+
+if(!status)
+return;
+
+
+
+await updateDoc(
+
+ref,
+
+{
+
+
+status:status
+
+
+}
+
+);
+
+
+
+loadReferees();
+
+
+
+};
+
+
+
+
+
+
+
+
+
+// =====================================
+// DIGITALER AUSWEIS
+// =====================================
+
+
+window.createPass =
+async function(id){
+
+
+
+const snap =
+await getDoc(
+
+doc(
+db,
+"referees",
+id
+
+)
+
+);
+
+
+
+const r =
+snap.data();
+
+
+
+
+
+const pass = `
+
+SG MISBURG
+
+JUNG-SCHIEDSRICHTER PASS
+
+
+Name:
+${r.firstname}
+${r.lastname}
+
+
+Klasse:
+${r.level}
+
+
+Status:
+${r.status}
+
+
+ID:
+${id}
+
+
+`;
+
+
+
+
+alert(pass);
+
+
+
+};
+
+
+
+
+
+
+
+// =====================================
+// NEUER JSR BUTTON
+// =====================================
+
+
+const newButton =
 document.getElementById(
 "newRef"
 );
 
 
 
-if(button){
-
-
-button.onclick =
-createReferee;
-
-
-}
+if(newButton){
 
 
 
-});
-
-
-
-
-
-
-
-
-async function createReferee(){
+newButton.onclick =
+()=>{
 
 
 
@@ -248,232 +632,24 @@ prompt(
 
 
 
-const level =
-prompt(
-"Einsatzklasse:"
-);
 
 
-
-
-
-if(
-!firstname ||
-!lastname
-)
-return;
-
-
-
-
-
-
-await addDoc(
-
-refereeCollection,
-
-{
-
+createReferee({
 
 firstname,
-
 lastname,
-
 email,
+level:
+"E-Jugend",
+phone:""
 
 
-level,
+});
 
-
-phone:"",
-
-
-club:"SG Misburg",
-
-
-status:"Aktiv",
-
-
-created:
-new Date()
-
-
-
-}
-
-
-);
-
-
-
-
-
-alert(
-"JSR gespeichert"
-);
-
-
-
-loadReferees();
-
-
-}
-
-
-
-
-
-
-
-
-
-
-
-
-// ======================================
-// LÖSCHEN
-// ======================================
-
-
-window.removeReferee =
-async function(id){
-
-
-
-if(
-!confirm(
-"JSR wirklich löschen?"
-)
-)
-return;
-
-
-
-
-
-await deleteDoc(
-
-doc(
-
-db,
-
-"referees",
-
-id
-
-)
-
-);
-
-
-
-
-loadReferees();
 
 
 };
 
 
 
-
-
-
-
-
-
-
-
-
-// ======================================
-// BEARBEITEN
-// ======================================
-
-
-window.editReferee =
-async function(id){
-
-
-
-const status =
-prompt(
-
-"Neuer Status:",
-
-"Aktiv"
-
-);
-
-
-
-
-if(!status)
-return;
-
-
-
-
-await updateDoc(
-
-doc(
-
-db,
-
-"referees",
-
-id
-
-),
-
-
-{
-
-
-status:status
-
-
 }
-
-
-);
-
-
-
-
-
-loadReferees();
-
-
-};
-
-
-
-
-
-
-
-
-
-
-
-
-// ======================================
-// DIGITALER PASS
-// ======================================
-
-
-window.createPass =
-function(id){
-
-
-
-alert(
-
-"Digitaler Jungschiedsrichter-Ausweis\n\nID: "
-+
-id
-
-);
-
-
-
-};

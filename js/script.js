@@ -1,72 +1,75 @@
-// ======================================
+// =====================================
 // SG MISBURG JSR PORTAL
-// HAUPT SCRIPT
-// ======================================
+// HAUPTSTEUERUNG
+// =====================================
 
 
 
 import {
-
-loadReferees
-
+    loadReferees
 }
-
-from
-
-"./referees.js";
-
+from "./referees.js";
 
 
 import {
-
-loadGames
-
+    loadGames
 }
-
-from
-
-"./games.js";
-
+from "./games.js";
 
 
 import {
-
-loadUsers
-
+    loadUsers
 }
-
-from
-
-"./users.js";
-
+from "./users.js";
 
 
 import {
-
-loadDashboard
-
+    loadAdmin
 }
-
-from
-
-"./admin.js";
+from "./admin.js";
 
 
+import {
+    loadLogs
+}
+from "./logs.js";
+
+
+
+
+// =====================================
+// PORTAL START
+// =====================================
+
+
+window.initPortal = function(){
+
+
+
+    startIntro();
+
+
+    setupNavigation();
+
+
+    updateDashboard();
+
+
+
+};
 
 
 
 
 
-// ======================================
+
+
+// =====================================
 // INTRO
-// ======================================
+// =====================================
 
 
-window.addEventListener(
-
-"DOMContentLoaded",
-
-()=>{
+function startIntro(){
 
 
 const intro =
@@ -83,11 +86,17 @@ document.getElementById(
 
 
 
+
+if(!intro)
+return;
+
+
+
+
 function closeIntro(){
 
 
 intro.style.opacity="0";
-
 
 
 setTimeout(()=>{
@@ -99,20 +108,20 @@ intro.style.display="none";
 },500);
 
 
-
 }
 
 
 
 
 setTimeout(
-
 closeIntro,
-
 3000
-
 );
 
+
+
+
+if(skip){
 
 
 skip.onclick =
@@ -125,50 +134,57 @@ closeIntro();
 };
 
 
+}
 
 
 
-});
-
-
-
-
-
+}
 
 
 
 
-// ======================================
+
+
+
+
+// =====================================
 // NAVIGATION
-// ======================================
+// =====================================
 
 
-document
-.querySelectorAll(
+function setupNavigation(){
+
+
+
+const buttons =
+document.querySelectorAll(
 "[data-page]"
-)
-
-.forEach(
-
-button=>{
-
-
-button.onclick =
-()=>{
-
-
-showPage(
-button.dataset.page
 );
 
 
 
-};
+
+buttons.forEach(
+button=>{
+
+
+button.addEventListener(
+"click",
+()=>{
+
+
+openPage(
+button.dataset.page
+);
 
 
 });
 
 
+});
+
+
+}
 
 
 
@@ -176,7 +192,8 @@ button.dataset.page
 
 
 
-function showPage(page){
+window.openPage =
+function(page){
 
 
 
@@ -186,14 +203,12 @@ document
 )
 
 .forEach(
+section=>{
 
-p=>{
 
-
-p.classList.add(
+section.classList.add(
 "hidden"
 );
-
 
 
 });
@@ -202,39 +217,52 @@ p.classList.add(
 
 
 
-document
-.getElementById(
+const target =
+document.getElementById(
 page
-)
-
-.classList.remove(
-"hidden"
 );
 
 
 
+if(target){
+
+
+target.classList.remove(
+"hidden"
+);
+
+
+}
 
 
 
-const titles={
 
 
-home:"Startseite",
+const titles = {
 
 
-dashboard:"Dashboard",
+home:
+"Startseite",
 
 
-referees:"JSR-Kartei",
+dashboard:
+"Dashboard",
 
 
-games:"Spiele & Ansetzungen",
+referees:
+"JSR-Kartei",
 
 
-users:"Benutzerverwaltung",
+games:
+"Spiele & Ansetzungen",
 
 
-admin:"Administration"
+users:
+"Benutzerverwaltung",
+
+
+admin:
+"Administration"
 
 
 };
@@ -247,16 +275,46 @@ document
 .getElementById(
 "pageTitle"
 )
-
-.innerHTML =
-titles[page];
-
+.innerText =
+titles[page] || "Portal";
 
 
+
+
+
+loadPageData(
+page
+);
+
+
+
+};
+
+
+
+
+
+
+
+
+// =====================================
+// DATEN LADEN
+// =====================================
+
+
+function loadPageData(page){
 
 
 
 switch(page){
+
+
+
+case "dashboard":
+
+updateDashboard();
+
+break;
 
 
 
@@ -284,9 +342,17 @@ break;
 
 
 
-case "dashboard":
+case "admin":
 
-loadDashboard();
+loadAdmin();
+
+break;
+
+
+
+case "logs":
+
+loadLogs();
 
 break;
 
@@ -300,5 +366,206 @@ break;
 
 
 
-window.showPage =
-showPage;
+
+
+
+
+
+
+// =====================================
+// DASHBOARD
+// =====================================
+
+
+async function updateDashboard(){
+
+
+
+const refs =
+document.getElementById(
+"countRefs"
+);
+
+
+const games =
+document.getElementById(
+"countGames"
+);
+
+
+const users =
+document.getElementById(
+"countUsers"
+);
+
+
+
+
+
+if(refs)
+refs.innerHTML =
+window.refereeCount || 0;
+
+
+
+if(games)
+games.innerHTML =
+window.gameCount || 0;
+
+
+
+if(users)
+users.innerHTML =
+window.userCount || 0;
+
+
+
+}
+
+
+
+
+
+
+// =====================================
+// RECHTE SYSTEM
+// =====================================
+
+
+window.checkAdmin =
+function(){
+
+
+return (
+
+window.currentUser
+&&
+window.currentUser.role==="Admin"
+
+);
+
+
+};
+
+
+
+
+
+window.checkManager =
+function(){
+
+
+return (
+
+window.currentUser
+&&
+
+(
+window.currentUser.role==="Admin"
+
+||
+
+window.currentUser.role==="Management"
+
+)
+
+);
+
+
+};
+
+
+
+
+
+
+
+
+
+// =====================================
+// LOGOUT
+// =====================================
+
+
+window.logoutUser =
+function(){
+
+
+
+location.reload();
+
+
+
+};
+
+
+
+
+
+
+
+// =====================================
+// HILFSFUNKTIONEN
+// =====================================
+
+
+
+window.escapeHTML =
+function(text){
+
+
+return String(text)
+
+.replace(
+/[&<>"']/g,
+
+function(match){
+
+
+return {
+
+"&":"&amp;",
+"<":"&lt;",
+">":"&gt;",
+'"':"&quot;",
+"'":"&#039;"
+
+}[match];
+
+
+});
+
+
+};
+
+
+
+
+
+
+// =====================================
+// START
+// =====================================
+
+
+window.addEventListener(
+
+"DOMContentLoaded",
+
+()=>{
+
+
+if(
+window.currentUser
+){
+
+
+initPortal();
+
+
+}
+
+
+}
+
+);
